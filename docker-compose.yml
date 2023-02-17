@@ -26,11 +26,11 @@ services:
 #    volumes:
 #      - socket:/var/run/unicorn/
 # NOTE: for go
-#    build: app/go
-#    volumes:
-#      - ./app/go:/app
-#    ports:
-#      - "1323:1323"
+    build: app/go
+    volumes:
+      - ./app/go:/app
+    ports:
+      - "1323:1323"
     networks:
       - front
       - back
