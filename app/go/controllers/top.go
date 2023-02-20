@@ -6,6 +6,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Index(c echo.Context) error {
+func top(c echo.Context) error {
 	return c.String(http.StatusOK, "minimal_sns_app")
 }
