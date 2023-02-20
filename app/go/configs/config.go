@@ -24,8 +24,7 @@ type ServerConfig struct {
 type DBConfig struct {
 	Driver     string `default:"mysql"`
 	DataSource string `default:"root:@(db:3306)/app"`
-	// NOTE: debug local
-	// DataSource string `default:"root:@(localhost:3306)/app"`
+	DataSourceTest string `default:"root:@(db:3306)/test"`
 }
 
 func Get() Config {

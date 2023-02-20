@@ -1,4 +1,4 @@
-package database
+package models
 
 import (
 	"database/sql"
@@ -9,7 +9,7 @@ import (
 
 var db *sql.DB
 
-func Init() {
+func InitDb() {
 	conf := configs.Get()
 
 	var err error
@@ -19,10 +19,20 @@ func Init() {
 	}
 }
 
-func Get() *sql.DB {
+func InitDbForTest() {
+	conf := configs.Get()
+
+	var err error
+	db, err = sql.Open(conf.DB.Driver, conf.DB.DataSourceTest)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func GetDb() *sql.DB {
 	return db
 }
 
-func Close() {
+func CloseDb() {
 	db.Close()
 }

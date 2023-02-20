@@ -42,13 +42,12 @@ services:
     hostname: db
     networks:
       - back
-    # NOTE: debug local
-    # ports:
-    #   - "3306:3306"
     volumes:
       - ./mysql/my.cnf:/etc/mysql/my.cnf
       - ./mysql/conf.d/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
       - ./mysql/0_init.sql:/docker-entrypoint-initdb.d/0_init.sql
+      - ./mysql/1_seed.sql:/docker-entrypoint-initdb.d/1_seed.sql
+      - ./mysql/2_test.sql:/docker-entrypoint-initdb.d/2_test.sql
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
       MYSQL_DATABASE: app
