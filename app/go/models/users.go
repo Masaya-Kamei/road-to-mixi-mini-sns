@@ -50,3 +50,34 @@ func GetAllUsers() ([]User, error) {
 
 	return users, nil
 }
+
+func GetFriendListByUserId(user_id int) ([]User, error) {
+	friendList := make([]User, 0)
+
+	rows, err := db.Query(
+		`select u.user_id, u.name from users u inner join friend_link fl
+		on u.user_id = fl.user1_id or u.user_id = fl.user2_id
+		where (fl.user1_id = ? or fl.user2_id = ?) and u.user_id != ?`,
+		user_id,
+		user_id,
+		user_id,
+	)
+	if err != nil {
+			return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+			var friend User
+			err := rows.Scan(&friend.UserID, &friend.Name);
+			if err != nil {
+				return nil, err
+			}
+			friendList = append(friendList, friend)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return friendList, nil
+}
