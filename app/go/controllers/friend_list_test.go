@@ -16,18 +16,21 @@ func TestMain(m *testing.M) {
 	defer models.CloseDb()
 
 	users := []models.User{
-		{UserID: 1, Name: "user1"},
-		{UserID: 2, Name: "user2"},
-		{UserID: 3, Name: "user3"},
-		{UserID: 4, Name: "user4"},
+		{UserID: 1, Name: "user1"}, {UserID: 2, Name: "user2"},
+		{UserID: 3, Name: "user3"}, {UserID: 4, Name: "user4"},
 		{UserID: 5, Name: "user5"},
 	}
-	if err := models.CreateUsers(users); err != nil {
-		panic(err)
+	err1 := models.DeleteAllUsers()
+	err2 := models.DeleteAllFriendLinks()
+	err3 := models.DeleteAllBlockLists()
+	err4 := models.CreateUsers(users)
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+		panic("setup failed")
 	}
 	defer func() {
-		if err := models.DeleteAllUsers(); err != nil {
-			panic(err)
+		err := models.DeleteAllUsers()
+		if err != nil {
+			panic("cleanup failed")
 		}
 	}()
 
@@ -36,6 +39,7 @@ func TestMain(m *testing.M) {
 
 func TestGetFriendList(t *testing.T) {
 
+	type fixture struct{ fls []models.FriendLink }
 	type param struct{ userId string }
 	type want struct {
 		code    int
@@ -45,22 +49,16 @@ func TestGetFriendList(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		setup   func() error
-		cleanup func() error
+		fixture fixture
 		param   param
 		want    want
 	}{
 		{
 			name: "OK",
-			setup: func() error {
-				fls := []models.FriendLink{
-					{User1ID: 1, User2ID: 2},
-					{User1ID: 1, User2ID: 3},
-				}
-				return models.CreateFriendLinks(fls)
-			},
-			cleanup: func() error {
-				return models.DeleteAllFriendLinks()
+			fixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 1, User2ID: 2}, {User1ID: 1, User2ID: 3},
+				},
 			},
 			param: param{userId: "1"},
 			want: want{
@@ -105,18 +103,18 @@ func TestGetFriendList(t *testing.T) {
 	e := echo.New()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.setup != nil {
-				if err := tt.setup(); err != nil {
-					t.Fatal(err)
+			if tt.fixture.fls != nil {
+				err := models.CreateFriendLinks(tt.fixture.fls)
+				if err != nil {
+					t.Fatal("setup failed")
 				}
 			}
-			if tt.cleanup != nil {
-				defer func() {
-					if err := tt.cleanup(); err != nil {
-						t.Fatal(err)
-					}
-				}()
-			}
+			defer func() {
+				err := models.DeleteAllFriendLinks()
+				if err != nil {
+					t.Fatal("cleanup failed")
+				}
+			}()
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			rec := httptest.NewRecorder()
@@ -147,6 +145,7 @@ func TestGetFriendList(t *testing.T) {
 
 func TestGetFriendListOfFriendList(t *testing.T) {
 
+	type fixture struct{ fls []models.FriendLink }
 	type param struct{ userId string }
 	type want struct {
 		code    int
@@ -156,24 +155,17 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		setup   func() error
-		cleanup func() error
+		fixture fixture
 		param   param
 		want    want
 	}{
 		{
 			name: "OK No Include Friend",
-			setup: func() error {
-				fls := []models.FriendLink{
-					{User1ID: 1, User2ID: 2},
-					{User1ID: 1, User2ID: 3},
-					{User1ID: 3, User2ID: 4},
-					{User1ID: 4, User2ID: 5},
-				}
-				return models.CreateFriendLinks(fls)
-			},
-			cleanup: func() error {
-				return models.DeleteAllFriendLinks()
+			fixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 1, User2ID: 2}, {User1ID: 1, User2ID: 3},
+					{User1ID: 3, User2ID: 4}, {User1ID: 4, User2ID: 5},
+				},
 			},
 			param: param{userId: "1"},
 			want: want{
@@ -183,18 +175,12 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 		},
 		{
 			name: "OK Include Friend",
-			setup: func() error {
-				fls := []models.FriendLink{
-					{User1ID: 1, User2ID: 2},
-					{User1ID: 1, User2ID: 3},
-					{User1ID: 2, User2ID: 3},
-					{User1ID: 3, User2ID: 4},
+			fixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 1, User2ID: 2}, {User1ID: 1, User2ID: 3},
+					{User1ID: 2, User2ID: 3}, {User1ID: 3, User2ID: 4},
 					{User1ID: 4, User2ID: 5},
-				}
-				return models.CreateFriendLinks(fls)
-			},
-			cleanup: func() error {
-				return models.DeleteAllFriendLinks()
+				},
 			},
 			param: param{userId: "1"},
 			want: want{
@@ -212,15 +198,10 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 		},
 		{
 			name: "Friend of Friend Not Found",
-			setup: func() error {
-				fls := []models.FriendLink{
-					{User1ID: 1, User2ID: 2},
-					{User1ID: 1, User2ID: 3},
-				}
-				return models.CreateFriendLinks(fls)
-			},
-			cleanup: func() error {
-				return models.DeleteAllFriendLinks()
+			fixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 1, User2ID: 2}, {User1ID: 1, User2ID: 3},
+				},
 			},
 			param: param{userId: "1"},
 			want: want{
@@ -257,18 +238,18 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 	e := echo.New()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.setup != nil {
-				if err := tt.setup(); err != nil {
-					t.Fatal(err)
+			if tt.fixture.fls != nil {
+				err := models.CreateFriendLinks(tt.fixture.fls)
+				if err != nil {
+					t.Fatal("setup failed")
 				}
 			}
-			if tt.cleanup != nil {
-				defer func() {
-					if err := tt.cleanup(); err != nil {
-						t.Fatal(err)
-					}
-				}()
-			}
+			defer func() {
+				err := models.DeleteAllFriendLinks()
+				if err != nil {
+					t.Fatal("cleanup failed")
+				}
+			}()
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			rec := httptest.NewRecorder()
