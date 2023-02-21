@@ -18,7 +18,7 @@ func CreateBlockList(bl *BlockList) error {
 }
 
 func CreateBlockLists(bls []BlockList) error {
-	query := "insert into friend_link (user1_id, user2_id) values "
+	query := "insert into block_list (user1_id, user2_id) values "
 	for _, bl := range bls {
 		query += fmt.Sprintf("(%d, %d),", bl.User1ID, bl.User2ID)
 	}
