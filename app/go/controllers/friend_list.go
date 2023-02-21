@@ -19,17 +19,32 @@ func getFriendList(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	friendList, err := models.GetFriendListByUserId(userId)
+	fl, err := models.GetFriendListByUserId(userId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get friend list")
 	}
 
-	return c.JSON(http.StatusOK, friendList)
+	return c.JSON(http.StatusOK, fl)
 }
 
 func getFriendListOfFriendList(c echo.Context) error {
-	// FIXME
-	return nil
+	userId, err := strconv.Atoi(c.Param("user_id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
+	}
+
+	_, err = models.GetUserByUserId(userId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
+	}
+
+	flFl, err := models.GetFriendListOfFriendListByUserId(userId)
+	if err != nil {
+		return echo.NewHTTPError(
+			http.StatusInternalServerError, "failed to get friend list of friend list")
+	}
+
+	return c.JSON(http.StatusOK, flFl)
 }
 
 func getFriendOfFriendListPaging(c echo.Context) error {
