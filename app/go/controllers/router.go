@@ -7,7 +7,7 @@ func NewRouter() *echo.Echo {
 
 	e.GET("/", top)
 	e.GET("/get_friend_list/:user_id", getFriendList)
-	e.GET("/get_friend_list_of_friend_list/:user_id", getFriendListOfFriendList)
+	e.GET("/get_friend_list_of_friend_list/:user_id", getFriendListOfFriendListExceptFriendAndBlocked)
 	e.GET("/get_friend_of_friend_list_paging", getFriendOfFriendListPaging)
 
 	return e

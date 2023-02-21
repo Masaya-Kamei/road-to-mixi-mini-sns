@@ -47,6 +47,28 @@ func getFriendListOfFriendList(c echo.Context) error {
 	return c.JSON(http.StatusOK, flFl)
 }
 
+func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
+	userId, err := strconv.Atoi(c.Param("user_id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
+	}
+
+	_, err = models.GetUser(userId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
+	}
+
+	flFl, err := models.GetFriendListOfFriendListExceptFriendAndBlocked(userId)
+	if err != nil {
+		return echo.NewHTTPError(
+			http.StatusInternalServerError,
+			"failed to get friend list of friend list except friend and blocked",
+		)
+	}
+
+	return c.JSON(http.StatusOK, flFl)
+}
+
 func getFriendOfFriendListPaging(c echo.Context) error {
 	// FIXME
 	return nil

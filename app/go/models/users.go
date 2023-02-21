@@ -119,12 +119,7 @@ func GetFriendListOfFriendList(user_id int) ([]User, error) {
 		)
 		inner join friend_link fl2
 		on (
-			(
-				fl1.user1_id = fl2.user1_id
-				or fl1.user1_id = fl2.user2_id
-				or fl1.user2_id = fl2.user1_id
-				or fl1.user2_id = fl2.user2_id
-			)
+			(u1.user_id = fl2.user1_id or u1.user_id = fl2.user2_id)
 			and (fl2.user1_id != ? and fl2.user2_id != ?)
 		)
 		inner join users u2
@@ -134,6 +129,60 @@ func GetFriendListOfFriendList(user_id int) ([]User, error) {
 		)
 		`,
 		user_id, user_id, user_id, user_id, user_id,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var fFl User
+		err := rows.Scan(&fFl.UserID, &fFl.Name)
+		if err != nil {
+			return nil, err
+		}
+		flFl = append(flFl, fFl)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return flFl, nil
+}
+
+func GetFriendListOfFriendListExceptFriendAndBlocked(user_id int) ([]User, error) {
+	flFl := make([]User, 0)
+
+	rows, err := db.Query(`
+		select distinct u2.user_id, u2.name
+		from users u1
+		inner join friend_link fl1
+		on (
+			(u1.user_id = fl1.user1_id or u1.user_id = fl1.user2_id)
+			and (fl1.user1_id = ? or fl1.user2_id = ?)
+			and (u1.user_id != ?)
+			and not exists (
+				select 1 from block_list bl
+				where (bl.user1_id = ? and bl.user2_id = u1.user_id)
+			)
+		)
+		inner join friend_link fl2
+		on (
+			(u1.user_id = fl2.user1_id or u1.user_id = fl2.user2_id)
+			and (fl2.user1_id != ? and fl2.user2_id != ?)
+		)
+		inner join users u2
+		on (
+			(fl2.user1_id = u2.user_id or fl2.user2_id = u2.user_id)
+			and (u1.user_id != u2.user_id)
+			and not exists (
+				select 1 from friend_link fl3
+				where (fl3.user1_id = ? and fl3.user2_id = u2.user_id)
+				or (fl3.user1_id = u2.user_id and fl3.user2_id = ?)
+			)
+		)
+		`,
+		user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,
 	)
 	if err != nil {
 		return nil, err
