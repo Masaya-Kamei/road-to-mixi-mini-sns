@@ -1,16 +1,28 @@
 package models
 
+import "fmt"
+
 type FriendLink struct {
 	User1ID int
 	User2ID int
 }
 
-func (fl *FriendLink) CreateFriendLink() error {
+func CreateFriendLink(fl *FriendLink) error {
 	_, err := db.Exec(
 		"insert into friend_link (user1_id, user2_id) values (?, ?)",
 		fl.User1ID,
 		fl.User2ID,
 	)
+
+	return err
+}
+
+func CreateFriendLinks(fls []FriendLink) error {
+  query := "insert into friend_link (user1_id, user2_id) values "
+	for _, fl := range fls {
+		query += fmt.Sprintf("(%d, %d),", fl.User1ID, fl.User2ID)
+	}
+	_, err := db.Exec(query[:len(query)-1])
 
 	return err
 }
@@ -49,4 +61,9 @@ func GetAllFriendLinks() ([]FriendLink, error) {
 	}
 
 	return fls, nil
+}
+
+func DeleteAllFriendLinks() error {
+	_, err := db.Exec("delete from friend_link")
+	return err
 }

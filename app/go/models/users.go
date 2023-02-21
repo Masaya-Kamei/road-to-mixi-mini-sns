@@ -1,17 +1,31 @@
 package models
 
+import (
+	"fmt"
+)
+
 type User struct {
 	UserID int
 	Name   string
 }
 
-func (u *User) CreateUser() error {
+func CreateUser(u *User)  error {
 
 	_, err := db.Exec(
 		"insert into users (user_id, name) values (?, ?)",
 		u.UserID,
 		u.Name,
 	)
+
+	return err
+}
+
+func CreateUsers(us []User) error {
+  query := "insert into users (user_id, name) values "
+	for _, u := range us {
+		query += fmt.Sprintf("(%d, '%s'),", u.UserID, u.Name)
+	}
+	_, err := db.Exec(query[:len(query)-1])
 
 	return err
 }
@@ -51,33 +65,40 @@ func GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
+func DeleteAllUsers() error {
+	_, err := db.Exec("delete from users")
+	return err
+}
+
 func GetFriendListByUserId(user_id int) ([]User, error) {
-	friendList := make([]User, 0)
+	fl := make([]User, 0)
 
 	rows, err := db.Query(
-		`select u.user_id, u.name from users u inner join friend_link fl
-		on u.user_id = fl.user1_id or u.user_id = fl.user2_id
-		where (fl.user1_id = ? or fl.user2_id = ?) and u.user_id != ?`,
+		`select u.user_id, u.name
+		from users u
+		inner join friend_link fl on (u.user_id = fl.user1_id or u.user_id = fl.user2_id)
+		where (fl.user1_id = ? or fl.user2_id = ?)
+		and u.user_id != ?`,
 		user_id,
 		user_id,
 		user_id,
 	)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-			var friend User
-			err := rows.Scan(&friend.UserID, &friend.Name);
+			var f User
+			err := rows.Scan(&f.UserID, &f.Name);
 			if err != nil {
 				return nil, err
 			}
-			friendList = append(friendList, friend)
+			fl = append(fl, f)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return friendList, nil
+	return fl, nil
 }

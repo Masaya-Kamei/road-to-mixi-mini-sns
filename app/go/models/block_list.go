@@ -1,16 +1,28 @@
 package models
 
+import "fmt"
+
 type BlockList struct {
 	User1ID int
 	User2ID int
 }
 
-func (bl *BlockList) CreateBlockList() error {
+func CreateBlockList(bl *BlockList) error {
 	_, err := db.Exec(
 		"insert into block_list (user1_id, user2_id) values (?, ?)",
 		bl.User1ID,
 		bl.User2ID,
 	)
+
+	return err
+}
+
+func CreateBlockLists(bls []BlockList) error {
+  query := "insert into friend_link (user1_id, user2_id) values "
+	for _, bl := range bls {
+		query += fmt.Sprintf("(%d, %d),", bl.User1ID, bl.User2ID)
+	}
+	_, err := db.Exec(query[:len(query)-1])
 
 	return err
 }
@@ -48,4 +60,9 @@ func GetAllBlockLists() ([]BlockList, error) {
 	}
 
 	return bls, nil
+}
+
+func DeleteAllBlockLists() error {
+	_, err := db.Exec("delete from block_list")
+	return err
 }
