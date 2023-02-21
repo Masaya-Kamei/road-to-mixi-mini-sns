@@ -3,11 +3,9 @@ package controllers
 import (
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"problem1/models"
 	"testing"
 
-	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,20 +14,23 @@ func TestMain(m *testing.M) {
 	models.InitDbForTest()
 	defer models.CloseDb()
 
-	fixtures, err := testfixtures.New(
-		testfixtures.Database(models.GetDb()),
-		testfixtures.Dialect("mysql"),
-		testfixtures.Directory("../fixtures"),
-	)
-	if err != nil {
+	users := []models.User{
+		{UserID: 1, Name: "user1"},
+		{UserID: 2, Name: "user2"},
+		{UserID: 3, Name: "user3"},
+		{UserID: 4, Name: "user4"},
+		{UserID: 5, Name: "user5"},
+	}
+	if err := models.CreateUsers(users); err != nil {
 		panic(err)
 	}
+	defer func () {
+		if err := models.DeleteAllUsers(); err != nil {
+			panic(err)
+		}
+	}()
 
-	if err := fixtures.Load(); err != nil {
-		panic(err)
-	}
-
-	os.Exit(m.Run())
+	m.Run()
 }
 
 func TestGetFriendList(t *testing.T) {
@@ -39,20 +40,32 @@ func TestGetFriendList(t *testing.T) {
 
 	tests := []struct {
 		name   string
+		setup  func() error
+		cleanup func() error
 		param  param
 		want   want
 	}{
 		{
 			name: "OK",
+			setup: func() error {
+				fls := []models.FriendLink{
+					{User1ID: 1, User2ID: 2},
+					{User1ID: 1, User2ID: 3},
+				}
+				return models.CreateFriendLinks(fls)
+			},
+			cleanup: func() error {
+				return models.DeleteAllFriendLinks()
+			},
 			param: param{userId: "1"},
 			want: want{
 				code: http.StatusOK,
-				body: `[{"UserID":2,"Name":"user2"},{"UserID":3,"Name":"user3"},{"UserID":4,"Name":"user4"}]` + "\n",
+				body: `[{"UserID":2,"Name":"user2"},{"UserID":3,"Name":"user3"}]` + "\n",
 			},
 		},
 		{
 			name: "Length 0",
-			param: param{userId: "5"},
+			param: param{userId: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[]`+ "\n",
@@ -87,6 +100,19 @@ func TestGetFriendList(t *testing.T) {
 	e := echo.New()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.setup != nil {
+				if err := tt.setup(); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if tt.cleanup != nil {
+				defer func () {
+					if err := tt.cleanup(); err != nil {
+						t.Fatal(err)
+					}
+				}()
+			}
+
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
