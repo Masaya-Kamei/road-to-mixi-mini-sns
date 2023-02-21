@@ -22,8 +22,8 @@ type ServerConfig struct {
 }
 
 type DBConfig struct {
-	Driver     string `default:"mysql"`
-	DataSource string `default:"root:@(db:3306)/app"`
+	Driver         string `default:"mysql"`
+	DataSource     string `default:"root:@(db:3306)/app"`
 	DataSourceTest string `default:"root:@(db:3306)/test"`
 }
 

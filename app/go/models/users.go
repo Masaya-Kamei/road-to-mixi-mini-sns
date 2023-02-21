@@ -9,7 +9,7 @@ type User struct {
 	Name   string
 }
 
-func CreateUser(u *User)  error {
+func CreateUser(u *User) error {
 
 	_, err := db.Exec(
 		"insert into users (user_id, name) values (?, ?)",
@@ -21,7 +21,7 @@ func CreateUser(u *User)  error {
 }
 
 func CreateUsers(us []User) error {
-  query := "insert into users (user_id, name) values "
+	query := "insert into users (user_id, name) values "
 	for _, u := range us {
 		query += fmt.Sprintf("(%d, '%s'),", u.UserID, u.Name)
 	}
@@ -46,17 +46,17 @@ func GetAllUsers() ([]User, error) {
 
 	rows, err := db.Query("select user_id, name from users")
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-			var user User
-			err := rows.Scan(&user.UserID, &user.Name);
-			if err != nil {
-				return nil, err
-			}
-			users = append(users, user)
+		var user User
+		err := rows.Scan(&user.UserID, &user.Name)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -87,12 +87,12 @@ func GetFriendListByUserId(user_id int) ([]User, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-			var f User
-			err := rows.Scan(&f.UserID, &f.Name);
-			if err != nil {
-				return nil, err
-			}
-			fl = append(fl, f)
+		var f User
+		err := rows.Scan(&f.UserID, &f.Name)
+		if err != nil {
+			return nil, err
+		}
+		fl = append(fl, f)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -115,19 +115,19 @@ func GetFriendListOfFriendListByUserId(user_id int) ([]User, error) {
 		and (u2.user_id != fl1.user1_id and u2.user_id != fl1.user2_id)
 		`,
 		user_id, user_id, user_id, user_id,
-	);
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-			var fFl User
-			err := rows.Scan(&fFl.UserID, &fFl.Name);
-			if err != nil {
-				return nil, err
-			}
-			flFl = append(flFl, fFl)
+		var fFl User
+		err := rows.Scan(&fFl.UserID, &fFl.Name)
+		if err != nil {
+			return nil, err
+		}
+		flFl = append(flFl, fFl)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

@@ -18,7 +18,7 @@ func CreateFriendLink(fl *FriendLink) error {
 }
 
 func CreateFriendLinks(fls []FriendLink) error {
-  query := "insert into friend_link (user1_id, user2_id) values "
+	query := "insert into friend_link (user1_id, user2_id) values "
 	for _, fl := range fls {
 		query += fmt.Sprintf("(%d, %d),", fl.User1ID, fl.User2ID)
 	}
@@ -44,17 +44,17 @@ func GetAllFriendLinks() ([]FriendLink, error) {
 
 	rows, err := db.Query("select user1_id, user2_id from friend_link")
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-			var fl FriendLink
-			err := rows.Scan(&fl.User1ID, &fl.User2ID);
-			if err != nil {
-				return nil, err
-			}
-			fls = append(fls, fl)
+		var fl FriendLink
+		err := rows.Scan(&fl.User1ID, &fl.User2ID)
+		if err != nil {
+			return nil, err
+		}
+		fls = append(fls, fl)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

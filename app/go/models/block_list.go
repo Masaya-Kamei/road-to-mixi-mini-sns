@@ -18,7 +18,7 @@ func CreateBlockList(bl *BlockList) error {
 }
 
 func CreateBlockLists(bls []BlockList) error {
-  query := "insert into friend_link (user1_id, user2_id) values "
+	query := "insert into friend_link (user1_id, user2_id) values "
 	for _, bl := range bls {
 		query += fmt.Sprintf("(%d, %d),", bl.User1ID, bl.User2ID)
 	}
@@ -43,17 +43,17 @@ func GetAllBlockLists() ([]BlockList, error) {
 
 	rows, err := db.Query("select user1_id, user2_id from block_list")
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-			var bl BlockList
-			err := rows.Scan(&bl.User1ID, &bl.User2ID);
-			if err != nil {
-				return nil, err
-			}
-			bls = append(bls, bl)
+		var bl BlockList
+		err := rows.Scan(&bl.User1ID, &bl.User2ID)
+		if err != nil {
+			return nil, err
+		}
+		bls = append(bls, bl)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
