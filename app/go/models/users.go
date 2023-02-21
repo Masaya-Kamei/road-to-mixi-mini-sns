@@ -155,26 +155,28 @@ func GetFriendListOfFriendListExceptFriendAndBlocked(user_id int) ([]User, error
 			(u1.user_id = fl1.user1_id or u1.user_id = fl1.user2_id)
 			and (fl1.user1_id = ? or fl1.user2_id = ?)
 			and (u1.user_id != ?)
-			and not exists (
-				select 1 from block_list bl
-				where (bl.user1_id = ? and bl.user2_id = u1.user_id)
-			)
+		)
+		left join block_list bl
+		on (
+			(bl.user1_id = ? and bl.user2_id = u1.user_id)
 		)
 		inner join friend_link fl2
 		on (
-			(u1.user_id = fl2.user1_id or u1.user_id = fl2.user2_id)
+			(bl.id is null)
+			and (u1.user_id = fl2.user1_id or u1.user_id = fl2.user2_id)
 			and (fl2.user1_id != ? and fl2.user2_id != ?)
 		)
 		inner join users u2
 		on (
 			(fl2.user1_id = u2.user_id or fl2.user2_id = u2.user_id)
 			and (u1.user_id != u2.user_id)
-			and not exists (
-				select 1 from friend_link fl3
-				where (fl3.user1_id = ? and fl3.user2_id = u2.user_id)
-				or (fl3.user1_id = u2.user_id and fl3.user2_id = ?)
-			)
 		)
+		left join friend_link fl3
+		on (
+			(u2.user_id = fl3.user1_id or u2.user_id = fl3.user2_id)
+			and (fl3.user1_id = ? or fl3.user2_id = ?)
+		)
+		where fl3.id is null
 		`,
 		user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,
 	)
