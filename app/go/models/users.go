@@ -73,12 +73,16 @@ func DeleteAllUsers() error {
 func GetFriendList(user_id int) ([]User, error) {
 	fl := make([]User, 0)
 
-	rows, err := db.Query(
-		`select u.user_id, u.name
+	rows, err := db.Query(`
+		select u.user_id, u.name
 		from users u
-		inner join friend_link fl on (u.user_id = fl.user1_id or u.user_id = fl.user2_id)
-		where (fl.user1_id = ? or fl.user2_id = ?)
-		and u.user_id != ?`,
+		inner join friend_link fl
+		on (
+			(u.user_id = fl.user1_id or u.user_id = fl.user2_id)
+			and (fl.user1_id = ? or fl.user2_id = ?)
+			and (u.user_id != ?)
+		)
+		`,
 		user_id, user_id, user_id,
 	)
 	if err != nil {
@@ -104,17 +108,32 @@ func GetFriendList(user_id int) ([]User, error) {
 func GetFriendListOfFriendList(user_id int) ([]User, error) {
 	flFl := make([]User, 0)
 
-	rows, err := db.Query(
-		`select distinct u2.user_id, u2.name
+	rows, err := db.Query(`
+		select distinct u2.user_id, u2.name
 		from users u1
-		inner join friend_link fl1 on (u1.user_id = fl1.user1_id or u1.user_id = fl1.user2_id)
-		inner join friend_link fl2 on (fl1.user1_id = fl2.user1_id or fl1.user1_id = fl2.user2_id or fl1.user2_id = fl2.user1_id or fl1.user2_id = fl2.user2_id)
-		inner join users u2 on (u2.user_id = fl2.user1_id or u2.user_id = fl2.user2_id)
-		where (fl1.user1_id = ? or fl1.user2_id = ?)
-		and (fl2.user1_id != ? and fl2.user2_id != ?)
-		and (u2.user_id != fl1.user1_id and u2.user_id != fl1.user2_id)
+		inner join friend_link fl1
+		on (
+			(u1.user_id = fl1.user1_id or u1.user_id = fl1.user2_id)
+			and (fl1.user1_id = ? or fl1.user2_id = ?)
+			and (u1.user_id != ?)
+		)
+		inner join friend_link fl2
+		on (
+			(
+				fl1.user1_id = fl2.user1_id
+				or fl1.user1_id = fl2.user2_id
+				or fl1.user2_id = fl2.user1_id
+				or fl1.user2_id = fl2.user2_id
+			)
+			and (fl2.user1_id != ? and fl2.user2_id != ?)
+		)
+		inner join users u2
+		on (
+			(fl2.user1_id = u2.user_id or fl2.user2_id = u2.user_id)
+			and (u1.user_id != u2.user_id)
+		)
 		`,
-		user_id, user_id, user_id, user_id,
+		user_id, user_id, user_id, user_id, user_id,
 	)
 	if err != nil {
 		return nil, err
