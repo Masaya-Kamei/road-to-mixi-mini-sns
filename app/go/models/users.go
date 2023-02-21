@@ -10,7 +10,6 @@ type User struct {
 }
 
 func CreateUser(u *User) error {
-
 	_, err := db.Exec(
 		"insert into users (user_id, name) values (?, ?)",
 		u.UserID,
@@ -32,7 +31,6 @@ func CreateUsers(us []User) error {
 
 func GetUser(user_id int) (User, error) {
 	var user User
-
 	err := db.QueryRow(
 		"select user_id, name from users where user_id = ?",
 		user_id,
@@ -42,14 +40,13 @@ func GetUser(user_id int) (User, error) {
 }
 
 func GetAllUsers() ([]User, error) {
-	users := make([]User, 0)
-
 	rows, err := db.Query("select user_id, name from users")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	users := make([]User, 0)
 	for rows.Next() {
 		var user User
 		err := rows.Scan(&user.UserID, &user.Name)
@@ -67,12 +64,11 @@ func GetAllUsers() ([]User, error) {
 
 func DeleteAllUsers() error {
 	_, err := db.Exec("delete from users")
+
 	return err
 }
 
 func GetFriendList(user_id int) ([]User, error) {
-	fl := make([]User, 0)
-
 	rows, err := db.Query(`
 		select u.user_id, u.name
 		from users u
@@ -90,6 +86,7 @@ func GetFriendList(user_id int) ([]User, error) {
 	}
 	defer rows.Close()
 
+	fl := make([]User, 0)
 	for rows.Next() {
 		var f User
 		err := rows.Scan(&f.UserID, &f.Name)
@@ -106,8 +103,6 @@ func GetFriendList(user_id int) ([]User, error) {
 }
 
 func GetFriendListOfFriendList(user_id int) ([]User, error) {
-	flFl := make([]User, 0)
-
 	rows, err := db.Query(`
 		select distinct u2.user_id, u2.name
 		from users u1
@@ -135,6 +130,7 @@ func GetFriendListOfFriendList(user_id int) ([]User, error) {
 	}
 	defer rows.Close()
 
+	flFl := make([]User, 0)
 	for rows.Next() {
 		var fFl User
 		err := rows.Scan(&fFl.UserID, &fFl.Name)
@@ -151,8 +147,6 @@ func GetFriendListOfFriendList(user_id int) ([]User, error) {
 }
 
 func GetFriendListOfFriendListExceptFriendAndBlocked(user_id int) ([]User, error) {
-	flFl := make([]User, 0)
-
 	rows, err := db.Query(`
 		select distinct u2.user_id, u2.name
 		from users u1
@@ -189,6 +183,7 @@ func GetFriendListOfFriendListExceptFriendAndBlocked(user_id int) ([]User, error
 	}
 	defer rows.Close()
 
+	flFl := make([]User, 0)
 	for rows.Next() {
 		var fFl User
 		err := rows.Scan(&fFl.UserID, &fFl.Name)

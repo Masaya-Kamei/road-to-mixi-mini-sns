@@ -29,7 +29,6 @@ func CreateFriendLinks(fls []FriendLink) error {
 
 func GetFriendLinkByUserId(user_id int) (FriendLink, error) {
 	var fl FriendLink
-
 	err := db.QueryRow(
 		"select user1_id, user2_id from friend_link where user1_id = ? or user2_id = ?",
 		user_id,
@@ -40,14 +39,13 @@ func GetFriendLinkByUserId(user_id int) (FriendLink, error) {
 }
 
 func GetAllFriendLinks() ([]FriendLink, error) {
-	fls := make([]FriendLink, 0)
-
 	rows, err := db.Query("select user1_id, user2_id from friend_link")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	fls := make([]FriendLink, 0)
 	for rows.Next() {
 		var fl FriendLink
 		err := rows.Scan(&fl.User1ID, &fl.User2ID)
@@ -65,5 +63,6 @@ func GetAllFriendLinks() ([]FriendLink, error) {
 
 func DeleteAllFriendLinks() error {
 	_, err := db.Exec("delete from friend_link")
+
 	return err
 }

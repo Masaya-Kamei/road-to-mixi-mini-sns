@@ -29,7 +29,6 @@ func CreateBlockLists(bls []BlockList) error {
 
 func GetBlockListByUserId(user_id int) (BlockList, error) {
 	var bl BlockList
-
 	err := db.QueryRow(
 		"select user1_id, user2_id from block_list where user1_id = ?",
 		user_id,
@@ -39,14 +38,13 @@ func GetBlockListByUserId(user_id int) (BlockList, error) {
 }
 
 func GetAllBlockLists() ([]BlockList, error) {
-	bls := make([]BlockList, 0)
-
 	rows, err := db.Query("select user1_id, user2_id from block_list")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	bls := make([]BlockList, 0)
 	for rows.Next() {
 		var bl BlockList
 		err := rows.Scan(&bl.User1ID, &bl.User2ID)
@@ -64,5 +62,6 @@ func GetAllBlockLists() ([]BlockList, error) {
 
 func DeleteAllBlockLists() error {
 	_, err := db.Exec("delete from block_list")
+
 	return err
 }
