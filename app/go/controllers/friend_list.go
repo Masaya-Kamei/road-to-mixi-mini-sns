@@ -14,12 +14,12 @@ func getFriendList(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
 	}
 
-	_, err = models.GetUserByUserId(userId)
+	_, err = models.GetUser(userId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	fl, err := models.GetFriendListByUserId(userId)
+	fl, err := models.GetFriendList(userId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get friend list")
 	}
@@ -33,12 +33,12 @@ func getFriendListOfFriendList(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
 	}
 
-	_, err = models.GetUserByUserId(userId)
+	_, err = models.GetUser(userId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, err := models.GetFriendListOfFriendListByUserId(userId)
+	flFl, err := models.GetFriendListOfFriendList(userId)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError, "failed to get friend list of friend list")

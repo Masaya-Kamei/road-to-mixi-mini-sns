@@ -30,7 +30,7 @@ func CreateUsers(us []User) error {
 	return err
 }
 
-func GetUserByUserId(user_id int) (User, error) {
+func GetUser(user_id int) (User, error) {
 	var user User
 
 	err := db.QueryRow(
@@ -70,7 +70,7 @@ func DeleteAllUsers() error {
 	return err
 }
 
-func GetFriendListByUserId(user_id int) ([]User, error) {
+func GetFriendList(user_id int) ([]User, error) {
 	fl := make([]User, 0)
 
 	rows, err := db.Query(
@@ -101,7 +101,7 @@ func GetFriendListByUserId(user_id int) ([]User, error) {
 	return fl, nil
 }
 
-func GetFriendListOfFriendListByUserId(user_id int) ([]User, error) {
+func GetFriendListOfFriendList(user_id int) ([]User, error) {
 	flFl := make([]User, 0)
 
 	rows, err := db.Query(
