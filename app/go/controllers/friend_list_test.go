@@ -1,12 +1,12 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"problem1/models"
 	"testing"
 
-	"github.com/kinbiko/jsonassert"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -129,8 +129,10 @@ func TestGetFriendList(t *testing.T) {
 			if err == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want.code, rec.Code)
-				ja := jsonassert.New(t)
-				ja.Assertf(rec.Body.String(), tt.want.body)
+				var expectedJson, actualJson []models.User
+				json.Unmarshal([]byte(rec.Body.Bytes()), &expectedJson)
+				json.Unmarshal([]byte(tt.want.body), &actualJson)
+				assert.ElementsMatch(t, expectedJson, actualJson)
 			} else {
 				assert.Error(t, err)
 				he, ok := err.(*echo.HTTPError)
@@ -195,7 +197,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 			param: param{userId: "1"},
 			want: want{
 				code: http.StatusOK,
-				body: `["<<UNORDERED>>",{"UserID":2,"Name":"user2"},{"UserID":3,"Name":"user3"},{"UserID":4,"Name":"user4"}]` + "\n",
+				body: `[{"UserID":2,"Name":"user2"},{"UserID":3,"Name":"user3"},{"UserID":4,"Name":"user4"}]` + "\n",
 			},
 		},
 		{
@@ -277,8 +279,10 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 			if err == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want.code, rec.Code)
-				ja := jsonassert.New(t)
-				ja.Assertf(rec.Body.String(), tt.want.body)
+				var expectedJson, actualJson []models.User
+				json.Unmarshal([]byte(rec.Body.Bytes()), &expectedJson)
+				json.Unmarshal([]byte(tt.want.body), &actualJson)
+				assert.ElementsMatch(t, expectedJson, actualJson)
 			} else {
 				assert.Error(t, err)
 				he, ok := err.(*echo.HTTPError)
