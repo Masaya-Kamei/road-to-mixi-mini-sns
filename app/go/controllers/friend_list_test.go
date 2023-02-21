@@ -168,6 +168,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 					{User1ID: 1, User2ID: 2},
 					{User1ID: 1, User2ID: 3},
 					{User1ID: 3, User2ID: 4},
+					{User1ID: 4, User2ID: 5},
 				}
 				return models.CreateFriendLinks(fls)
 			},
@@ -188,6 +189,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 					{User1ID: 1, User2ID: 3},
 					{User1ID: 2, User2ID: 3},
 					{User1ID: 3, User2ID: 4},
+					{User1ID: 4, User2ID: 5},
 				}
 				return models.CreateFriendLinks(fls)
 			},
