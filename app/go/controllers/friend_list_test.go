@@ -6,6 +6,7 @@ import (
 	"problem1/models"
 	"testing"
 
+	"github.com/kinbiko/jsonassert"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,7 +25,7 @@ func TestMain(m *testing.M) {
 	if err := models.CreateUsers(users); err != nil {
 		panic(err)
 	}
-	defer func () {
+	defer func() {
 		if err := models.DeleteAllUsers(); err != nil {
 			panic(err)
 		}
@@ -35,15 +36,19 @@ func TestMain(m *testing.M) {
 
 func TestGetFriendList(t *testing.T) {
 
-	type param struct { userId string }
-	type want struct { code int; body string; message string}
+	type param struct{ userId string }
+	type want struct {
+		code    int
+		body    string
+		message string
+	}
 
 	tests := []struct {
-		name   string
-		setup  func() error
+		name    string
+		setup   func() error
 		cleanup func() error
-		param  param
-		want   want
+		param   param
+		want    want
 	}{
 		{
 			name: "OK",
@@ -64,34 +69,34 @@ func TestGetFriendList(t *testing.T) {
 			},
 		},
 		{
-			name: "Length 0",
+			name:  "Friend Not Found",
 			param: param{userId: "1"},
 			want: want{
 				code: http.StatusOK,
-				body: `[]`+ "\n",
+				body: `[]` + "\n",
 			},
 		},
 		{
-			name: "UserId Not Found",
+			name:  "UserId Not Found",
 			param: param{userId: "100"},
 			want: want{
-				code: http.StatusNotFound,
+				code:    http.StatusNotFound,
 				message: `user_id is not found`,
 			},
 		},
 		{
-			name: "UserId Not Integer",
+			name:  "UserId Not Integer",
 			param: param{userId: "a"},
 			want: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `user_id is not integer`,
 			},
 		},
 		{
-			name: "UserId Empty",
+			name:  "UserId Empty",
 			param: param{userId: ""},
 			want: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `user_id is not integer`,
 			},
 		},
@@ -106,7 +111,7 @@ func TestGetFriendList(t *testing.T) {
 				}
 			}
 			if tt.cleanup != nil {
-				defer func () {
+				defer func() {
 					if err := tt.cleanup(); err != nil {
 						t.Fatal(err)
 					}
@@ -122,15 +127,164 @@ func TestGetFriendList(t *testing.T) {
 
 			err := getFriendList(c)
 			if err == nil {
-				assert.NoError(t, err);
+				assert.NoError(t, err)
 				assert.Equal(t, tt.want.code, rec.Code)
-				assert.Equal(t, tt.want.body, rec.Body.String())
+				ja := jsonassert.New(t)
+				ja.Assertf(rec.Body.String(), tt.want.body)
 			} else {
 				assert.Error(t, err)
 				he, ok := err.(*echo.HTTPError)
 				if ok {
-						assert.Equal(t, tt.want.code, he.Code)
-						assert.Equal(t, tt.want.message, he.Message)
+					assert.Equal(t, tt.want.code, he.Code)
+					assert.Equal(t, tt.want.message, he.Message)
+				}
+			}
+		})
+	}
+}
+
+func TestGetFriendListOfFriendList(t *testing.T) {
+
+	type param struct{ userId string }
+	type want struct {
+		code    int
+		body    string
+		message string
+	}
+
+	tests := []struct {
+		name    string
+		setup   func() error
+		cleanup func() error
+		param   param
+		want    want
+	}{
+		{
+			name: "OK No Include Friend",
+			setup: func() error {
+				fls := []models.FriendLink{
+					{User1ID: 1, User2ID: 2},
+					{User1ID: 1, User2ID: 3},
+					{User1ID: 3, User2ID: 4},
+				}
+				return models.CreateFriendLinks(fls)
+			},
+			cleanup: func() error {
+				return models.DeleteAllFriendLinks()
+			},
+			param: param{userId: "1"},
+			want: want{
+				code: http.StatusOK,
+				body: `[{"UserID":4,"Name":"user4"}]` + "\n",
+			},
+		},
+		{
+			name: "OK Include Friend",
+			setup: func() error {
+				fls := []models.FriendLink{
+					{User1ID: 1, User2ID: 2},
+					{User1ID: 1, User2ID: 3},
+					{User1ID: 2, User2ID: 3},
+					{User1ID: 3, User2ID: 4},
+				}
+				return models.CreateFriendLinks(fls)
+			},
+			cleanup: func() error {
+				return models.DeleteAllFriendLinks()
+			},
+			param: param{userId: "1"},
+			want: want{
+				code: http.StatusOK,
+				body: `["<<UNORDERED>>",{"UserID":2,"Name":"user2"},{"UserID":3,"Name":"user3"},{"UserID":4,"Name":"user4"}]` + "\n",
+			},
+		},
+		{
+			name:  "Friend Not Found",
+			param: param{userId: "1"},
+			want: want{
+				code: http.StatusOK,
+				body: `[]` + "\n",
+			},
+		},
+		{
+			name: "Friend of Friend Not Found",
+			setup: func() error {
+				fls := []models.FriendLink{
+					{User1ID: 1, User2ID: 2},
+					{User1ID: 1, User2ID: 3},
+				}
+				return models.CreateFriendLinks(fls)
+			},
+			cleanup: func() error {
+				return models.DeleteAllFriendLinks()
+			},
+			param: param{userId: "1"},
+			want: want{
+				code: http.StatusOK,
+				body: `[]` + "\n",
+			},
+		},
+		{
+			name:  "UserId Not Found",
+			param: param{userId: "100"},
+			want: want{
+				code:    http.StatusNotFound,
+				message: `user_id is not found`,
+			},
+		},
+		{
+			name:  "UserId Not Integer",
+			param: param{userId: "a"},
+			want: want{
+				code:    http.StatusBadRequest,
+				message: `user_id is not integer`,
+			},
+		},
+		{
+			name:  "UserId Empty",
+			param: param{userId: ""},
+			want: want{
+				code:    http.StatusBadRequest,
+				message: `user_id is not integer`,
+			},
+		},
+	}
+
+	e := echo.New()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setup != nil {
+				if err := tt.setup(); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if tt.cleanup != nil {
+				defer func() {
+					if err := tt.cleanup(); err != nil {
+						t.Fatal(err)
+					}
+				}()
+			}
+
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+			c.SetPath("/get_friend_list_of_friend_list/:user_id")
+			c.SetParamNames("user_id")
+			c.SetParamValues(tt.param.userId)
+
+			err := getFriendListOfFriendList(c)
+			if err == nil {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want.code, rec.Code)
+				ja := jsonassert.New(t)
+				ja.Assertf(rec.Body.String(), tt.want.body)
+			} else {
+				assert.Error(t, err)
+				he, ok := err.(*echo.HTTPError)
+				if ok {
+					assert.Equal(t, tt.want.code, he.Code)
+					assert.Equal(t, tt.want.message, he.Message)
 				}
 			}
 		})
