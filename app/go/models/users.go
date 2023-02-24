@@ -268,11 +268,11 @@ func GetFriendListOfFriendListPaging(userID int, limit, page *int) ([]User, int,
 		return nil, 0, err
 	}
 
-	var count int
-	err = db.QueryRow("select found_rows()").Scan(&count)
+	var foundRows int
+	err = db.QueryRow("select found_rows()").Scan(&foundRows)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return flFl, count, nil
+	return flFl, foundRows, nil
 }

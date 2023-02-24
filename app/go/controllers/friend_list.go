@@ -93,7 +93,7 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, count, err := models.GetFriendListOfFriendListPaging(userID, limit, page)
+	flFl, foundRows, err := models.GetFriendListOfFriendListPaging(userID, limit, page)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
@@ -102,14 +102,14 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 	}
 
 	if (limit != nil && page != nil) {
-		c.Response().Header().Set("Link", generateLinkHeader(c, *limit, *page, count))
+		c.Response().Header().Set("Link", generateLinkHeader(c, *limit, *page, foundRows))
 	}
 
 	return c.JSON(http.StatusOK, flFl)
 }
 
-func generateLinkHeader(c echo.Context, limit, page, count int) string {
-	lastPage := (count + 1) / limit
+func generateLinkHeader(c echo.Context, limit, page, foundRows int) string {
+	lastPage := (foundRows + 1) / limit
 	baseUrl := "http://"+ c.Request().Host + c.Request().URL.Path
 	linkHeaderTemplate := "<" + baseUrl + "?limit=%d&page=%d>; rel=\"%s\", "
 	linkHeader := fmt.Sprintf(linkHeaderTemplate, limit, 1, "first")
