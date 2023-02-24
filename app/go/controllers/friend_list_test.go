@@ -681,6 +681,32 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 		},
 		{
+			name: "OK: Include Blocked Limit=2 Page=1",
+			fixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 1, User2ID: 2}, {User1ID: 1, User2ID: 3},
+					{User1ID: 2, User2ID: 4}, {User1ID: 2, User2ID: 5},
+					{User1ID: 2, User2ID: 6}, {User1ID: 2, User2ID: 7},
+					{User1ID: 3, User2ID: 8}, {User1ID: 3, User2ID: 9},
+					{User1ID: 3, User2ID: 10},
+				},
+				bls: []models.BlockList{
+					{User1ID: 1, User2ID: 2},
+				},
+			},
+			param: param{
+				userID: "1",
+				limit: NullString{String: "2", Valid: true},
+				page: NullString{String: "1", Valid: true},
+			},
+			want: want{
+				code: http.StatusOK,
+				body: `
+					[{"UserID":8,"Name":"user8"},{"UserID":9,"Name":"user9"}]` + "\n",
+				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=2>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=2>; rel="next"`,
+			},
+		},
+		{
 			name:  "NotFound: UserId Not Found",
 			param: param{userID: "100"},
 			want: want{
