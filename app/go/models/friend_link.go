@@ -27,12 +27,12 @@ func CreateFriendLinks(fls []FriendLink) error {
 	return err
 }
 
-func GetFriendLinkByUserId(user_id int) (FriendLink, error) {
+func GetFriendLinkByUserId(userID int) (FriendLink, error) {
 	var fl FriendLink
 	err := db.QueryRow(
 		"select user1_id, user2_id from friend_link where user1_id = ? or user2_id = ?",
-		user_id,
-		user_id,
+		userID,
+		userID,
 	).Scan(&fl.User1ID, &fl.User2ID)
 
 	return fl, err

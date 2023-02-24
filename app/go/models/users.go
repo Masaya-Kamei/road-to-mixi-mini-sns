@@ -30,11 +30,11 @@ func CreateUsers(us []User) error {
 	return err
 }
 
-func GetUser(user_id int) (User, error) {
+func GetUser(UserID int) (User, error) {
 	var user User
 	err := db.QueryRow(
 		"select user_id, name from users where user_id = ?",
-		user_id,
+		UserID,
 	).Scan(&user.UserID, &user.Name)
 
 	return user, err
@@ -69,7 +69,7 @@ func DeleteAllUsers() error {
 	return err
 }
 
-func GetFriendList(user_id int) ([]User, error) {
+func GetFriendList(userID int) ([]User, error) {
 	rows, err := db.Query(`
 		select u.user_id, u.name
 		from users u
@@ -80,7 +80,7 @@ func GetFriendList(user_id int) ([]User, error) {
 			and (u.user_id != ?)
 		)
 		`,
-		user_id, user_id, user_id,
+		userID, userID, userID,
 	)
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func GetFriendList(user_id int) ([]User, error) {
 	return fl, nil
 }
 
-func GetFriendListOfFriendList(user_id int) ([]User, error) {
+func GetFriendListOfFriendList(userID int) ([]User, error) {
 	rows, err := db.Query(`
 		select distinct u2.user_id, u2.name
 		from users u1
@@ -124,7 +124,7 @@ func GetFriendListOfFriendList(user_id int) ([]User, error) {
 			and (u1.user_id != u2.user_id)
 		)
 		`,
-		user_id, user_id, user_id, user_id, user_id,
+		userID, userID, userID, userID, userID,
 	)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func GetFriendListOfFriendList(user_id int) ([]User, error) {
 	return flFl, nil
 }
 
-func GetFriendListOfFriendListExceptFriendAndBlocked(user_id int) ([]User, error) {
+func GetFriendListOfFriendListExceptFriendAndBlocked(userID int) ([]User, error) {
 	rows, err := db.Query(`
 		select distinct u2.user_id, u2.name
 		from users u1
@@ -179,7 +179,7 @@ func GetFriendListOfFriendListExceptFriendAndBlocked(user_id int) ([]User, error
 		)
 		where fl3.id is null
 		`,
-		user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,
+		userID, userID, userID, userID, userID, userID, userID, userID,
 	)
 	if err != nil {
 		return nil, err
@@ -203,7 +203,7 @@ func GetFriendListOfFriendListExceptFriendAndBlocked(user_id int) ([]User, error
 }
 
 
-func GetFriendListOfFriendListPaging(user_id int, limit, page *int) ([]User, int, error) {
+func GetFriendListOfFriendListPaging(userID int, limit, page *int) ([]User, int, error) {
 	var limitNum, offset uint64 = math.MaxUint64, 0
 	if limit != nil {
 		limitNum = uint64(*limit)
@@ -247,7 +247,7 @@ func GetFriendListOfFriendListPaging(user_id int, limit, page *int) ([]User, int
 		order by u2.user_id
 		limit ? offset ?
 		`,
-		user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id,
+		userID, userID, userID, userID, userID, userID, userID, userID,
 		limitNum, offset,
 	)
 	if err != nil {

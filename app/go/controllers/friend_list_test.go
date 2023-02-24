@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 func TestGetFriendList(t *testing.T) {
 
 	type fixture struct{ fls []models.FriendLink }
-	type param struct{ userId string }
+	type param struct{ userID string }
 	type want struct {
 		code    int
 		body    string
@@ -68,7 +68,7 @@ func TestGetFriendList(t *testing.T) {
 					{User1ID: 1, User2ID: 2}, {User1ID: 1, User2ID: 3},
 				},
 			},
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[{"UserID":2,"Name":"user2"},{"UserID":3,"Name":"user3"}]` + "\n",
@@ -76,7 +76,7 @@ func TestGetFriendList(t *testing.T) {
 		},
 		{
 			name:  "OK: Friend Not Found",
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[]` + "\n",
@@ -84,7 +84,7 @@ func TestGetFriendList(t *testing.T) {
 		},
 		{
 			name:  "NotFound: UserId Not Found",
-			param: param{userId: "100"},
+			param: param{userID: "100"},
 			want: want{
 				code:    http.StatusNotFound,
 				message: `user_id is not found`,
@@ -92,7 +92,7 @@ func TestGetFriendList(t *testing.T) {
 		},
 		{
 			name:  "BadRequest: UserId Not Integer",
-			param: param{userId: "a"},
+			param: param{userID: "a"},
 			want: want{
 				code:    http.StatusBadRequest,
 				message: `user_id is not integer`,
@@ -100,7 +100,7 @@ func TestGetFriendList(t *testing.T) {
 		},
 		{
 			name:  "BadRequest: UserId Empty",
-			param: param{userId: ""},
+			param: param{userID: ""},
 			want: want{
 				code:    http.StatusBadRequest,
 				message: `user_id is not integer`,
@@ -129,7 +129,7 @@ func TestGetFriendList(t *testing.T) {
 			c := e.NewContext(req, rec)
 			c.SetPath("/get_friend_list/:user_id")
 			c.SetParamNames("user_id")
-			c.SetParamValues(tt.param.userId)
+			c.SetParamValues(tt.param.userID)
 
 			err := getFriendList(c)
 			if err == nil {
@@ -154,7 +154,7 @@ func TestGetFriendList(t *testing.T) {
 func TestGetFriendListOfFriendList(t *testing.T) {
 
 	type fixture struct{ fls []models.FriendLink }
-	type param struct{ userId string }
+	type param struct{ userID string }
 	type want struct {
 		code    int
 		body    string
@@ -175,7 +175,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 					{User1ID: 3, User2ID: 4}, {User1ID: 4, User2ID: 5},
 				},
 			},
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[{"UserID":4,"Name":"user4"}]` + "\n",
@@ -190,7 +190,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 					{User1ID: 4, User2ID: 5},
 				},
 			},
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[
@@ -200,7 +200,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 		},
 		{
 			name:  "OK: Friend Not Found",
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[]` + "\n",
@@ -213,7 +213,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 					{User1ID: 1, User2ID: 2}, {User1ID: 1, User2ID: 3},
 				},
 			},
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[]` + "\n",
@@ -221,7 +221,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 		},
 		{
 			name:  "NotFound: UserId Not Found",
-			param: param{userId: "100"},
+			param: param{userID: "100"},
 			want: want{
 				code:    http.StatusNotFound,
 				message: `user_id is not found`,
@@ -229,7 +229,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 		},
 		{
 			name:  "BadRequest: UserId Not Integer",
-			param: param{userId: "a"},
+			param: param{userID: "a"},
 			want: want{
 				code:    http.StatusBadRequest,
 				message: `user_id is not integer`,
@@ -237,7 +237,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 		},
 		{
 			name:  "BadRequest: UserId Empty",
-			param: param{userId: ""},
+			param: param{userID: ""},
 			want: want{
 				code:    http.StatusBadRequest,
 				message: `user_id is not integer`,
@@ -266,7 +266,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 			c := e.NewContext(req, rec)
 			c.SetPath("/get_friend_list_of_friend_list/:user_id")
 			c.SetParamNames("user_id")
-			c.SetParamValues(tt.param.userId)
+			c.SetParamValues(tt.param.userID)
 
 			err := getFriendListOfFriendList(c)
 			if err == nil {
@@ -292,7 +292,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 
 	type fixture struct{ fls []models.FriendLink; bls []models.BlockList }
-	type param struct{ userId string }
+	type param struct{ userID string }
 	type want struct {
 		code    int
 		body    string
@@ -313,7 +313,7 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 					{User1ID: 3, User2ID: 4}, {User1ID: 4, User2ID: 5},
 				},
 			},
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[{"UserID":4,"Name":"user4"}]` + "\n",
@@ -328,7 +328,7 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 					{User1ID: 4, User2ID: 5},
 				},
 			},
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[{"UserID":4,"Name":"user4"}]` + "\n",
@@ -346,7 +346,7 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 					{User1ID: 1, User2ID: 2},
 				},
 			},
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[{"UserID":5,"Name":"user5"}]` + "\n",
@@ -354,7 +354,7 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 		},
 		{
 			name:  "OK: Friend Not Found",
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[]` + "\n",
@@ -367,7 +367,7 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 					{User1ID: 1, User2ID: 2}, {User1ID: 1, User2ID: 3},
 				},
 			},
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[]` + "\n",
@@ -375,7 +375,7 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 		},
 		{
 			name:  "NotFound: UserId Not Found",
-			param: param{userId: "100"},
+			param: param{userID: "100"},
 			want: want{
 				code:    http.StatusNotFound,
 				message: `user_id is not found`,
@@ -383,7 +383,7 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 		},
 		{
 			name:  "BadRequest: UserId Not Integer",
-			param: param{userId: "a"},
+			param: param{userID: "a"},
 			want: want{
 				code:    http.StatusBadRequest,
 				message: `user_id is not integer`,
@@ -391,7 +391,7 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 		},
 		{
 			name:  "BadRequest: UserId Empty",
-			param: param{userId: ""},
+			param: param{userID: ""},
 			want: want{
 				code:    http.StatusBadRequest,
 				message: `user_id is not integer`,
@@ -427,7 +427,7 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 			c := e.NewContext(req, rec)
 			c.SetPath("/get_friend_list_of_friend_list/:user_id")
 			c.SetParamNames("user_id")
-			c.SetParamValues(tt.param.userId)
+			c.SetParamValues(tt.param.userID)
 
 			err := getFriendListOfFriendListExceptFriendAndBlocked(c)
 			if err == nil {
@@ -453,7 +453,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 
 	type fixture struct{ fls []models.FriendLink; bls []models.BlockList }
 	type param struct{
-		userId string
+		userID string
 		limit NullString
 		page  NullString
 	}
@@ -481,7 +481,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 					{User1ID: 2, User2ID: 9}, {User1ID: 2, User2ID: 10},
 				},
 			},
-			param: param{userId: "1"},
+			param: param{userID: "1"},
 			want: want{
 				code: http.StatusOK,
 				body: `[
@@ -503,7 +503,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				},
 			},
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "2", Valid: true},
 			},
 			want: want{
@@ -523,7 +523,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				},
 			},
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "0", Valid: true},
 			},
 			want: want{
@@ -543,7 +543,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				},
 			},
 			param: param{
-				userId: "1",
+				userID: "1",
 				page: NullString{String: "0", Valid: true},
 			},
 			want: want{
@@ -563,7 +563,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				},
 			},
 			param: param{
-				userId: "1",
+				userID: "1",
 				page: NullString{String: "2", Valid: true},
 			},
 			want: want{
@@ -583,7 +583,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				},
 			},
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "2", Valid: true},
 				page: NullString{String: "0", Valid: true},
 			},
@@ -605,7 +605,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				},
 			},
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "2", Valid: true},
 				page: NullString{String: "1", Valid: true},
 			},
@@ -627,7 +627,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				},
 			},
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "2", Valid: true},
 				page: NullString{String: "2", Valid: true},
 			},
@@ -649,7 +649,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				},
 			},
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "2", Valid: true},
 				page: NullString{String: "4", Valid: true},
 			},
@@ -671,7 +671,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				},
 			},
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "2", Valid: true},
 				page: NullString{String: "5", Valid: true},
 			},
@@ -682,7 +682,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		},
 		{
 			name:  "NotFound: UserId Not Found",
-			param: param{userId: "100"},
+			param: param{userID: "100"},
 			want: want{
 				code:    http.StatusNotFound,
 				message: `user_id is not found`,
@@ -690,7 +690,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		},
 		{
 			name:  "BadRequest: UserId Not Integer",
-			param: param{userId: "a"},
+			param: param{userID: "a"},
 			want: want{
 				code:    http.StatusBadRequest,
 				message: `invalid params`,
@@ -698,7 +698,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		},
 		{
 			name:  "BadRequest: UserId Empty",
-			param: param{userId: ""},
+			param: param{userID: ""},
 			want: want{
 				code:    http.StatusBadRequest,
 				message: `invalid params`,
@@ -707,7 +707,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		{
 			name: "BadRequest: Limit=-1 Page=undefined",
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "-1", Valid: true},
 			},
 			want: want{
@@ -718,7 +718,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		{
 			name: "BadRequest: Limit=undefined Page=-1",
 			param: param{
-				userId: "1",
+				userID: "1",
 				page: NullString{String: "-1", Valid: true},
 			},
 			want: want{
@@ -729,7 +729,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		{
 			name: "BadRequest: Limit=ALL Page=undefined",
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "ALL", Valid: true},
 			},
 			want: want{
@@ -740,7 +740,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		{
 			name: "BadRequest: Limit=undefined Page=a",
 			param: param{
-				userId: "1",
+				userID: "1",
 				page: NullString{String: "a", Valid: true},
 			},
 			want: want{
@@ -751,7 +751,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		{
 			name: "BadRequest: Limit=(empty) Page=undefined",
 			param: param{
-				userId: "1",
+				userID: "1",
 				limit: NullString{String: "", Valid: true},
 			},
 			want: want{
@@ -762,7 +762,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		{
 			name: "BadRequest: Limit=undefined Page=(empty)",
 			param: param{
-				userId: "1",
+				userID: "1",
 				page: NullString{String: "", Valid: true},
 			},
 			want: want{
@@ -809,12 +809,12 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				req = httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 			}
 			req.Host = "localhost:1323"
-			req.URL.Path = "/get_friend_of_friend_list_paging/" + tt.param.userId
+			req.URL.Path = "/get_friend_of_friend_list_paging/" + tt.param.userID
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			c.SetPath("/get_friend_of_friend_list_of_paging/:user_id")
 			c.SetParamNames("user_id")
-			c.SetParamValues(tt.param.userId)
+			c.SetParamValues(tt.param.userID)
 
 			err := getFriendOfFriendListPaging(c)
 			if err == nil {

@@ -27,11 +27,11 @@ func CreateBlockLists(bls []BlockList) error {
 	return err
 }
 
-func GetBlockListByUserId(user_id int) (BlockList, error) {
+func GetBlockListByUserId(UserID int) (BlockList, error) {
 	var bl BlockList
 	err := db.QueryRow(
 		"select user1_id, user2_id from block_list where user1_id = ?",
-		user_id,
+		UserID,
 	).Scan(&bl.User1ID, &bl.User2ID)
 
 	return bl, err

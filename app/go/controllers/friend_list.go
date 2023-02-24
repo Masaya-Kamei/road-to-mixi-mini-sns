@@ -11,17 +11,17 @@ import (
 )
 
 func getFriendList(c echo.Context) error {
-	userId, err := strconv.Atoi(c.Param("user_id"))
+	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
 	}
 
-	_, err = models.GetUser(userId)
+	_, err = models.GetUser(userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	fl, err := models.GetFriendList(userId)
+	fl, err := models.GetFriendList(userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get friend list")
 	}
@@ -30,17 +30,17 @@ func getFriendList(c echo.Context) error {
 }
 
 func getFriendListOfFriendList(c echo.Context) error {
-	userId, err := strconv.Atoi(c.Param("user_id"))
+	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
 	}
 
-	_, err = models.GetUser(userId)
+	_, err = models.GetUser(userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, err := models.GetFriendListOfFriendList(userId)
+	flFl, err := models.GetFriendListOfFriendList(userID)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError, "failed to get friend list of friend list")
@@ -50,17 +50,17 @@ func getFriendListOfFriendList(c echo.Context) error {
 }
 
 func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
-	userId, err := strconv.Atoi(c.Param("user_id"))
+	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
 	}
 
-	_, err = models.GetUser(userId)
+	_, err = models.GetUser(userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, err := models.GetFriendListOfFriendListExceptFriendAndBlocked(userId)
+	flFl, err := models.GetFriendListOfFriendListExceptFriendAndBlocked(userID)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
@@ -73,27 +73,27 @@ func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
 
 func getFriendOfFriendListPaging(c echo.Context) error {
 	type Params struct {
-		UserId *int `param:"user_id"`
+		UserID *int `param:"user_id"`
 		Limit *int `query:"limit"`
 		Page *int `query:"page"`
 	}
 
-	var params Params = Params{UserId: nil, Limit: nil, Page: nil}
+	var params Params = Params{UserID: nil, Limit: nil, Page: nil}
 	err := c.Bind(&params)
 	if ((err != nil) ||
-		(params.UserId == nil || c.Param("user_id") == "") ||
+		(params.UserID == nil || c.Param("user_id") == "") ||
 		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit < 0)) ||
 		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0))) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
 	}
-	userId, limit, page := *params.UserId, params.Limit, params.Page
+	userID, limit, page := *params.UserID, params.Limit, params.Page
 
-	_, err = models.GetUser(userId)
+	_, err = models.GetUser(userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, count, err := models.GetFriendListOfFriendListPaging(userId, limit, page)
+	flFl, count, err := models.GetFriendListOfFriendListPaging(userID, limit, page)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
