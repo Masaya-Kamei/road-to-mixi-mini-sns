@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"problem1/models"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -91,7 +93,7 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, err := models.GetFriendListOfFriendListPaging(userId, limit, page)
+	flFl, count, err := models.GetFriendListOfFriendListPaging(userId, limit, page)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
@@ -99,5 +101,24 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 		)
 	}
 
+	if (limit != nil && page != nil) {
+		c.Response().Header().Set("Link", generateLinkHeader(c, *limit, *page, count))
+	}
+
 	return c.JSON(http.StatusOK, flFl)
+}
+
+func generateLinkHeader(c echo.Context, limit, page, count int) string {
+	lastPage := (count + 1) / limit
+	baseUrl := "http://"+ c.Request().Host + c.Request().URL.Path
+	linkHeaderTemplate := "<" + baseUrl + "?limit=%d&page=%d>; rel=\"%s\", "
+	linkHeader := fmt.Sprintf(linkHeaderTemplate, limit, 1, "first")
+	linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, lastPage, "last")
+	if (page > 1) {
+		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page - 1, "prev")
+	}
+	if (page < lastPage) {
+		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page + 1, "next")
+	}
+	return strings.TrimSuffix(linkHeader, ", ")
 }

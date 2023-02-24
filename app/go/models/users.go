@@ -203,7 +203,7 @@ func GetFriendListOfFriendListExceptFriendAndBlocked(user_id int) ([]User, error
 }
 
 
-func GetFriendListOfFriendListPaging(user_id int, limit, page *int) ([]User, error) {
+func GetFriendListOfFriendListPaging(user_id int, limit, page *int) ([]User, int, error) {
 	var limitNum, offset uint64 = math.MaxUint64, 0
 	if limit != nil {
 		limitNum = uint64(*limit)
@@ -215,7 +215,7 @@ func GetFriendListOfFriendListPaging(user_id int, limit, page *int) ([]User, err
 	}
 
 	rows, err := db.Query(`
-		select distinct u2.user_id, u2.name
+		select sql_calc_found_rows distinct u2.user_id, u2.name
 		from users u1
 		inner join friend_link fl1
 		on (
@@ -251,7 +251,7 @@ func GetFriendListOfFriendListPaging(user_id int, limit, page *int) ([]User, err
 		limitNum, offset,
 	)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -260,13 +260,19 @@ func GetFriendListOfFriendListPaging(user_id int, limit, page *int) ([]User, err
 		var fFl User
 		err := rows.Scan(&fFl.UserID, &fFl.Name)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		flFl = append(flFl, fFl)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return flFl, nil
+	var count int
+	err = db.QueryRow("select found_rows()").Scan(&count)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return flFl, count, nil
 }

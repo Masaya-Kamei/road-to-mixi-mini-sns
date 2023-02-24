@@ -461,6 +461,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 		code    int
 		body    string
 		message string
+		link    string
 	}
 
 	tests := []struct {
@@ -589,6 +590,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			want: want{
 				code: http.StatusOK,
 				body: `[]` + "\n",
+				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=4>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="next"`,
 			},
 		},
 		{
@@ -610,6 +612,29 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			want: want{
 				code: http.StatusOK,
 				body: `[{"UserID":3,"Name":"user3"},{"UserID":4, "Name":"user4"}]` + "\n",
+				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=4>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=2>; rel="next"`,
+			},
+		},
+		{
+			name: "OK: Limit=2 Page=2",
+			fixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 1, User2ID: 2},
+					{User1ID: 2, User2ID: 3}, {User1ID: 2, User2ID: 4},
+					{User1ID: 2, User2ID: 5}, {User1ID: 2, User2ID: 6},
+					{User1ID: 2, User2ID: 7}, {User1ID: 2, User2ID: 8},
+					{User1ID: 2, User2ID: 9}, {User1ID: 2, User2ID: 10},
+				},
+			},
+			param: param{
+				userId: "1",
+				limit: NullString{String: "2", Valid: true},
+				page: NullString{String: "2", Valid: true},
+			},
+			want: want{
+				code: http.StatusOK,
+				body: `[{"UserID":5,"Name":"user5"},{"UserID":6, "Name":"user6"}]` + "\n",
+				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=4>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="prev", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=3>; rel="next"`,
 			},
 		},
 		{
@@ -631,6 +656,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			want: want{
 				code: http.StatusOK,
 				body: `[{"UserID":9,"Name":"user9"},{"UserID":10, "Name":"user10"}]` + "\n",
+				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=4>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=3>; rel="prev"`,
 			},
 		},
 		{
@@ -782,6 +808,8 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			} else {
 				req = httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 			}
+			req.Host = "localhost:1323"
+			req.URL.Path = "/get_friend_of_friend_list_paging/" + tt.param.userId
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 			c.SetPath("/get_friend_of_friend_list_of_paging/:user_id")
@@ -792,10 +820,10 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			if err == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want.code, rec.Code)
-				var expectedJson, actualJson []models.User
-				json.Unmarshal([]byte(tt.want.body), &expectedJson)
-				json.Unmarshal([]byte(rec.Body.Bytes()), &actualJson)
-				assert.ElementsMatch(t, expectedJson, actualJson)
+				assert.JSONEq(t, tt.want.body, rec.Body.String())
+				if tt.want.link != "" {
+					assert.Equal(t, tt.want.link, rec.Header().Get("Link"))
+				}
 			} else {
 				assert.Error(t, err)
 				he, ok := err.(*echo.HTTPError)
