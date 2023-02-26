@@ -74,16 +74,16 @@ func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
 func getFriendOfFriendListPaging(c echo.Context) error {
 	type Params struct {
 		UserID *int `param:"user_id"`
-		Limit *int `query:"limit"`
-		Page *int `query:"page"`
+		Limit  *int `query:"limit"`
+		Page   *int `query:"page"`
 	}
 
 	var params Params = Params{UserID: nil, Limit: nil, Page: nil}
 	err := c.Bind(&params)
-	if ((err != nil) ||
+	if (err != nil) ||
 		(params.UserID == nil || c.Param("user_id") == "") ||
 		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit < 0)) ||
-		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0))) {
+		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0)) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
 	}
 	userID, limit, page := *params.UserID, params.Limit, params.Page
@@ -101,7 +101,7 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 		)
 	}
 
-	if (limit != nil && page != nil) {
+	if limit != nil && page != nil {
 		c.Response().Header().Set("Link", generateLinkHeader(c, *limit, *page, foundRows))
 	}
 
@@ -110,15 +110,15 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 
 func generateLinkHeader(c echo.Context, limit, page, foundRows int) string {
 	lastPage := (foundRows + 1) / limit
-	baseUrl := "http://"+ c.Request().Host + c.Request().URL.Path
+	baseUrl := "http://" + c.Request().Host + c.Request().URL.Path
 	linkHeaderTemplate := "<" + baseUrl + "?limit=%d&page=%d>; rel=\"%s\", "
 	linkHeader := fmt.Sprintf(linkHeaderTemplate, limit, 1, "first")
 	linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, lastPage, "last")
-	if (page > 1) {
-		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page - 1, "prev")
+	if page > 1 {
+		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page-1, "prev")
 	}
-	if (page < lastPage) {
-		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page + 1, "next")
+	if page < lastPage {
+		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page+1, "next")
 	}
 	return strings.TrimSuffix(linkHeader, ", ")
 }
@@ -127,16 +127,16 @@ func generateLinkHeader(c echo.Context, limit, page, foundRows int) string {
 func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 	type Params struct {
 		UserID *int `param:"user_id"`
-		Limit *int `query:"limit"`
-		Page *int `query:"page"`
+		Limit  *int `query:"limit"`
+		Page   *int `query:"page"`
 	}
 
 	var params Params = Params{UserID: nil, Limit: nil, Page: nil}
 	err := c.Bind(&params)
-	if ((err != nil) ||
+	if (err != nil) ||
 		(params.UserID == nil || c.Param("user_id") == "") ||
 		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit < 0)) ||
-		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0))) {
+		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0)) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
 	}
 	userID, limit, page := *params.UserID, params.Limit, params.Page
@@ -154,7 +154,7 @@ func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 		)
 	}
 
-	if (limit != nil && page != nil) {
+	if limit != nil && page != nil {
 		c.Response().Header().Set("Link", generateLinkHeader(c, *limit, *page, foundRows))
 	}
 
