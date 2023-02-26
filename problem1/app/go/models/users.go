@@ -237,7 +237,6 @@ func GetFriendListOfFriendListExceptFriendAndBlocked(userID int) ([]User, error)
 	return flFl, nil
 }
 
-
 func GetFriendListOfFriendListPaging(userID int, limit, page *int) ([]User, int, error) {
 	var limitNum, offset uint64 = math.MaxUint64, 0
 	if limit != nil {

@@ -74,16 +74,16 @@ func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
 func getFriendOfFriendListPaging(c echo.Context) error {
 	type Params struct {
 		UserID *int `param:"user_id"`
-		Limit *int `query:"limit"`
-		Page *int `query:"page"`
+		Limit  *int `query:"limit"`
+		Page   *int `query:"page"`
 	}
 
 	var params Params = Params{UserID: nil, Limit: nil, Page: nil}
 	err := c.Bind(&params)
-	if ((err != nil) ||
+	if (err != nil) ||
 		(params.UserID == nil || c.Param("user_id") == "") ||
 		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit < 0)) ||
-		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0))) {
+		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0)) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
 	}
 	userID, limit, page := *params.UserID, params.Limit, params.Page
@@ -101,7 +101,7 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 		)
 	}
 
-	if (limit != nil && page != nil) {
+	if limit != nil && page != nil {
 		c.Response().Header().Set("Link", generateLinkHeader(c, *limit, *page, foundRows))
 	}
 
@@ -110,15 +110,15 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 
 func generateLinkHeader(c echo.Context, limit, page, foundRows int) string {
 	lastPage := (foundRows + 1) / limit
-	baseUrl := "http://"+ c.Request().Host + c.Request().URL.Path
+	baseUrl := "http://" + c.Request().Host + c.Request().URL.Path
 	linkHeaderTemplate := "<" + baseUrl + "?limit=%d&page=%d>; rel=\"%s\", "
 	linkHeader := fmt.Sprintf(linkHeaderTemplate, limit, 1, "first")
 	linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, lastPage, "last")
-	if (page > 1) {
-		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page - 1, "prev")
+	if page > 1 {
+		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page-1, "prev")
 	}
-	if (page < lastPage) {
-		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page + 1, "next")
+	if page < lastPage {
+		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page+1, "next")
 	}
 	return strings.TrimSuffix(linkHeader, ", ")
 }
@@ -127,16 +127,16 @@ func generateLinkHeader(c echo.Context, limit, page, foundRows int) string {
 func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 	type Params struct {
 		UserID *int `param:"user_id"`
-		Limit *int `query:"limit"`
-		Page *int `query:"page"`
+		Limit  *int `query:"limit"`
+		Page   *int `query:"page"`
 	}
 
 	var params Params = Params{UserID: nil, Limit: nil, Page: nil}
 	err := c.Bind(&params)
-	if ((err != nil) ||
+	if (err != nil) ||
 		(params.UserID == nil || c.Param("user_id") == "") ||
 		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit < 0)) ||
-		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0))) {
+		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0)) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
 	}
 	userID, limit, page := *params.UserID, params.Limit, params.Page
@@ -154,41 +154,9 @@ func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 		)
 	}
 
-	if (limit != nil && page != nil) {
+	if limit != nil && page != nil {
 		c.Response().Header().Set("Link", generateLinkHeader(c, *limit, *page, foundRows))
 	}
 
 	return c.JSON(http.StatusOK, flFl)
-}
-
-// for debug
-func createFriendLink(c echo.Context) error {
-	type Params struct {
-		User1ID *int `json:"user1_id"`
-		User2ID *int `json:"user2_id"`
-	}
-	var params Params
-	err := c.Bind(&params)
-	if err != nil || params.User1ID == nil || params.User2ID == nil ||
-		*params.User1ID == *params.User2ID ||
-		*params.User1ID <= 0 || *params.User2ID <= 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
-	}
-
-	users, err := models.GetUsers([]int{*params.User1ID, *params.User2ID})
-	if err != nil || len(users) != 2 {
-		if len(users) == 0 || users[0].UserID != *params.User1ID {
-			return echo.NewHTTPError(http.StatusNotFound, "user1_id is not found")
-		} else {
-			return echo.NewHTTPError(http.StatusNotFound, "user2_id is not found")
-		}
-	}
-
-	fl := &models.FriendLink{User1ID: *params.User1ID, User2ID: *params.User2ID}
-	err = models.CreateFriendLink(fl)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create friend link")
-	}
-
-	return c.JSON(http.StatusOK, fl)
 }

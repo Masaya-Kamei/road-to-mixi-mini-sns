@@ -25,10 +25,10 @@ func TestMain(m *testing.M) {
 	models.InitCacheForTest()
 
 	users := []models.User{
-		{UserID: 1, Name: "user1"}, {UserID: 2,  Name: "user2"},
-		{UserID: 3, Name: "user3"}, {UserID: 4,  Name: "user4"},
-		{UserID: 5, Name: "user5"}, {UserID: 6,  Name: "user6"},
-		{UserID: 7, Name: "user7"}, {UserID: 8,  Name: "user8"},
+		{UserID: 1, Name: "user1"}, {UserID: 2, Name: "user2"},
+		{UserID: 3, Name: "user3"}, {UserID: 4, Name: "user4"},
+		{UserID: 5, Name: "user5"}, {UserID: 6, Name: "user6"},
+		{UserID: 7, Name: "user7"}, {UserID: 8, Name: "user8"},
 		{UserID: 9, Name: "user9"}, {UserID: 10, Name: "user10"},
 	}
 	err1 := models.DeleteAllUsers()
@@ -291,10 +291,12 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 	}
 }
 
-
 func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 
-	type fixture struct{ fls []models.FriendLink; bls []models.BlockList }
+	type fixture struct {
+		fls []models.FriendLink
+		bls []models.BlockList
+	}
 	type param struct{ userID string }
 	type want struct {
 		code    int
@@ -405,25 +407,25 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 	e := echo.New()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-		if tt.fixture.fls != nil {
-			err := models.CreateFriendLinks(tt.fixture.fls)
-			if err != nil {
-				t.Fatal("setup failed")
+			if tt.fixture.fls != nil {
+				err := models.CreateFriendLinks(tt.fixture.fls)
+				if err != nil {
+					t.Fatal("setup failed")
+				}
 			}
-		}
-		if tt.fixture.bls != nil {
-			err := models.CreateBlockLists(tt.fixture.bls)
-			if err != nil {
-				t.Fatal("setup failed")
+			if tt.fixture.bls != nil {
+				err := models.CreateBlockLists(tt.fixture.bls)
+				if err != nil {
+					t.Fatal("setup failed")
+				}
 			}
-		}
-		defer func() {
-			err1 := models.DeleteAllFriendLinks()
-			err2 := models.DeleteAllBlockLists()
-			if err1 != nil || err2 != nil {
-				t.Fatal("cleanup failed")
-			}
-		}()
+			defer func() {
+				err1 := models.DeleteAllFriendLinks()
+				err2 := models.DeleteAllBlockLists()
+				if err1 != nil || err2 != nil {
+					t.Fatal("cleanup failed")
+				}
+			}()
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			rec := httptest.NewRecorder()
@@ -454,11 +456,14 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 
 func TestGetFriendOfFriendListPaging(t *testing.T) {
 
-	type fixture struct{ fls []models.FriendLink; bls []models.BlockList }
-	type param struct{
+	type fixture struct {
+		fls []models.FriendLink
+		bls []models.BlockList
+	}
+	type param struct {
 		userID string
-		limit NullString
-		page  NullString
+		limit  NullString
+		page   NullString
 	}
 	type want struct {
 		code    int
@@ -507,7 +512,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				limit: NullString{String: "2", Valid: true},
+				limit:  NullString{String: "2", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -527,7 +532,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				limit: NullString{String: "0", Valid: true},
+				limit:  NullString{String: "0", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -547,7 +552,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				page: NullString{String: "0", Valid: true},
+				page:   NullString{String: "0", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -567,7 +572,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				page: NullString{String: "2", Valid: true},
+				page:   NullString{String: "2", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -587,8 +592,8 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				limit: NullString{String: "2", Valid: true},
-				page: NullString{String: "0", Valid: true},
+				limit:  NullString{String: "2", Valid: true},
+				page:   NullString{String: "0", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -609,8 +614,8 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				limit: NullString{String: "2", Valid: true},
-				page: NullString{String: "1", Valid: true},
+				limit:  NullString{String: "2", Valid: true},
+				page:   NullString{String: "1", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -631,8 +636,8 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				limit: NullString{String: "2", Valid: true},
-				page: NullString{String: "2", Valid: true},
+				limit:  NullString{String: "2", Valid: true},
+				page:   NullString{String: "2", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -653,8 +658,8 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				limit: NullString{String: "2", Valid: true},
-				page: NullString{String: "4", Valid: true},
+				limit:  NullString{String: "2", Valid: true},
+				page:   NullString{String: "4", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -675,8 +680,8 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				limit: NullString{String: "2", Valid: true},
-				page: NullString{String: "5", Valid: true},
+				limit:  NullString{String: "2", Valid: true},
+				page:   NullString{String: "5", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -699,8 +704,8 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			param: param{
 				userID: "1",
-				limit: NullString{String: "2", Valid: true},
-				page: NullString{String: "1", Valid: true},
+				limit:  NullString{String: "2", Valid: true},
+				page:   NullString{String: "1", Valid: true},
 			},
 			want: want{
 				code: http.StatusOK,
@@ -737,10 +742,10 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			name: "BadRequest: Limit=-1 Page=undefined",
 			param: param{
 				userID: "1",
-				limit: NullString{String: "-1", Valid: true},
+				limit:  NullString{String: "-1", Valid: true},
 			},
 			want: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `invalid params`,
 			},
 		},
@@ -748,10 +753,10 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			name: "BadRequest: Limit=undefined Page=-1",
 			param: param{
 				userID: "1",
-				page: NullString{String: "-1", Valid: true},
+				page:   NullString{String: "-1", Valid: true},
 			},
 			want: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `invalid params`,
 			},
 		},
@@ -759,10 +764,10 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			name: "BadRequest: Limit=ALL Page=undefined",
 			param: param{
 				userID: "1",
-				limit: NullString{String: "ALL", Valid: true},
+				limit:  NullString{String: "ALL", Valid: true},
 			},
 			want: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `invalid params`,
 			},
 		},
@@ -770,10 +775,10 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			name: "BadRequest: Limit=undefined Page=a",
 			param: param{
 				userID: "1",
-				page: NullString{String: "a", Valid: true},
+				page:   NullString{String: "a", Valid: true},
 			},
 			want: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `invalid params`,
 			},
 		},
@@ -781,10 +786,10 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			name: "BadRequest: Limit=(empty) Page=undefined",
 			param: param{
 				userID: "1",
-				limit: NullString{String: "", Valid: true},
+				limit:  NullString{String: "", Valid: true},
 			},
 			want: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `invalid params`,
 			},
 		},
@@ -792,10 +797,10 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			name: "BadRequest: Limit=undefined Page=(empty)",
 			param: param{
 				userID: "1",
-				page: NullString{String: "", Valid: true},
+				page:   NullString{String: "", Valid: true},
 			},
 			want: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `invalid params`,
 			},
 		},
@@ -868,14 +873,14 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 // bonus
 func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 
-	type fixture struct{
+	type fixture struct {
 		fls []models.FriendLink
 		bls []models.BlockList
 	}
-	type param struct{
+	type param struct {
 		userID string
-		limit NullString
-		page  NullString
+		limit  NullString
+		page   NullString
 	}
 	type want struct {
 		code    int
@@ -885,19 +890,19 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		param   param
-		firstFixture fixture
-		firstWant    want
+		name          string
+		param         param
+		firstFixture  fixture
+		firstWant     want
 		secondFixture fixture
-		secondWant want
+		secondWant    want
 	}{
 		{
 			name: "OK: Limit=2 Page=2",
 			param: param{
 				userID: "1",
-				limit: NullString{String: "2", Valid: true},
-				page: NullString{String: "2", Valid: true},
+				limit:  NullString{String: "2", Valid: true},
+				page:   NullString{String: "2", Valid: true},
 			},
 			firstFixture: fixture{
 				fls: []models.FriendLink{
@@ -935,7 +940,7 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 				}
 			}()
 
-			setFixture := func (fixture fixture) {
+			setFixture := func(fixture fixture) {
 				if fixture.fls != nil {
 					err := models.CreateFriendLinks(fixture.fls)
 					if err != nil {
@@ -950,7 +955,7 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 				}
 			}
 
-			createContext := func (param param) (echo.Context, *httptest.ResponseRecorder) {
+			createContext := func(param param) (echo.Context, *httptest.ResponseRecorder) {
 				q := make(url.Values)
 				if tt.param.limit.Valid {
 					q.Set("limit", tt.param.limit.String)
@@ -972,7 +977,7 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 				c.SetParamNames("user_id")
 				c.SetParamValues(tt.param.userID)
 
-				return c, rec;
+				return c, rec
 			}
 
 			assertion := func(want want, err error, rec *httptest.ResponseRecorder) {
