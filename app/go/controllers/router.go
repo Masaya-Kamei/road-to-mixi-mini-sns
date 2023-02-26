@@ -11,5 +11,10 @@ func NewRouter() *echo.Echo {
 	e.GET("/get_friend_list_of_friend_list/:user_id", getFriendListOfFriendListExceptFriendAndBlocked)
 	e.GET("/get_friend_of_friend_list_paging/:user_id", getFriendOfFriendListPaging)
 
+	// bonus
+	e.GET("/get_friend_of_friend_list_paging_with_cache/:user_id", getFriendOfFriendListPagingWithCache)
+	// for debug
+	e.POST("/create_friend_link", createFriendLink)
+
 	return e
 }

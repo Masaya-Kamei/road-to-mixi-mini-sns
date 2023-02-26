@@ -11,6 +11,8 @@ func main() {
 	models.InitDb()
 	defer models.CloseDb()
 
+	models.InitCache()
+
 	e := controllers.NewRouter()
 	e.Logger.Fatal(e.Start(":" + strconv.Itoa(configs.Get().Server.Port)))
 }

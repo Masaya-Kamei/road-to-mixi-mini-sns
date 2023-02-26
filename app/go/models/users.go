@@ -3,6 +3,9 @@ package models
 import (
 	"fmt"
 	"math"
+	"strconv"
+
+	"github.com/patrickmn/go-cache"
 )
 
 type User struct {
@@ -42,6 +45,38 @@ func GetUser(UserID int) (User, error) {
 
 func GetAllUsers() ([]User, error) {
 	rows, err := db.Query("select user_id, name from users")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := make([]User, 0)
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.UserID, &user.Name)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func GetUsers(UserIDs []int) ([]User, error) {
+	userIDsStr := ""
+	for _, userID := range UserIDs {
+		userIDsStr += strconv.Itoa(userID) + ","
+	}
+	userIDsStr = userIDsStr[:len(userIDsStr)-1]
+
+	rows, err := db.Query(`
+		select user_id, name from users
+		where user_id in (` + userIDsStr + `)
+	`)
 	if err != nil {
 		return nil, err
 	}
@@ -273,6 +308,38 @@ func GetFriendListOfFriendListPaging(userID int, limit, page *int) ([]User, int,
 	if err != nil {
 		return nil, 0, err
 	}
+
+	return flFl, foundRows, nil
+}
+
+// bonus
+type FlFlPagingCache struct {
+	flFl      []User
+	foundRows int
+}
+
+func GetFriendListOfFriendListPagingWithCache(userID int, limit, page *int) ([]User, int, error) {
+	cacheKey := "friend_of_friend_list_paging-" + strconv.Itoa(userID)
+	if limit != nil {
+		cacheKey += "-" + strconv.Itoa(*limit)
+	}
+	if page != nil {
+		cacheKey += "-" + strconv.Itoa(*page)
+	}
+
+	flFlPagingCache, found := cacheInstance.Get(cacheKey)
+	if found {
+		flFlPagingCache := flFlPagingCache.(FlFlPagingCache)
+		return flFlPagingCache.flFl, flFlPagingCache.foundRows, nil
+	}
+
+	flFl, foundRows, err := GetFriendListOfFriendListPaging(userID, limit, page)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	newCache := FlFlPagingCache{flFl: flFl, foundRows: foundRows}
+	cacheInstance.Set(cacheKey, newCache, cache.DefaultExpiration)
 
 	return flFl, foundRows, nil
 }

@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"problem1/models"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,8 @@ type NullString struct {
 func TestMain(m *testing.M) {
 	models.InitDbForTest()
 	defer models.CloseDb()
+
+	models.InitCacheForTest()
 
 	users := []models.User{
 		{UserID: 1, Name: "user1"}, {UserID: 2,  Name: "user2"},
@@ -858,6 +861,153 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 					assert.Equal(t, tt.want.message, he.Message)
 				}
 			}
+		})
+	}
+}
+
+// bonus
+func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
+
+	type fixture struct{
+		fls []models.FriendLink
+		bls []models.BlockList
+	}
+	type param struct{
+		userID string
+		limit NullString
+		page  NullString
+	}
+	type want struct {
+		code    int
+		body    string
+		message string
+		link    string
+	}
+
+	tests := []struct {
+		name    string
+		param   param
+		firstFixture fixture
+		firstWant    want
+		secondFixture fixture
+		secondWant want
+	}{
+		{
+			name: "OK: Limit=2 Page=2",
+			param: param{
+				userID: "1",
+				limit: NullString{String: "2", Valid: true},
+				page: NullString{String: "2", Valid: true},
+			},
+			firstFixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 1, User2ID: 2},
+					{User1ID: 2, User2ID: 3}, {User1ID: 2, User2ID: 4},
+					{User1ID: 2, User2ID: 5},
+				},
+			},
+			firstWant: want{
+				code: http.StatusOK,
+				body: `[{"UserID":5,"Name":"user5"}]` + "\n",
+				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=2>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="prev"`,
+			},
+			secondFixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 2, User2ID: 6},
+				},
+			},
+			secondWant: want{
+				code: http.StatusOK,
+				body: `[{"UserID":5,"Name":"user5"},{"UserID":6,"Name":"user6"}]` + "\n",
+				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=2>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="prev"`,
+			},
+		},
+	}
+
+	e := echo.New()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				err1 := models.DeleteAllFriendLinks()
+				err2 := models.DeleteAllBlockLists()
+				if err1 != nil || err2 != nil {
+					t.Fatal("cleanup failed")
+				}
+			}()
+
+			setFixture := func (fixture fixture) {
+				if fixture.fls != nil {
+					err := models.CreateFriendLinks(fixture.fls)
+					if err != nil {
+						t.Fatal("setup failed")
+					}
+				}
+				if fixture.bls != nil {
+					err := models.CreateBlockLists(fixture.bls)
+					if err != nil {
+						t.Fatal("setup failed")
+					}
+				}
+			}
+
+			createContext := func (param param) (echo.Context, *httptest.ResponseRecorder) {
+				q := make(url.Values)
+				if tt.param.limit.Valid {
+					q.Set("limit", tt.param.limit.String)
+				}
+				if tt.param.page.Valid {
+					q.Set("page", tt.param.page.String)
+				}
+				var req *http.Request
+				if len(q) == 0 {
+					req = httptest.NewRequest(http.MethodGet, "/", nil)
+				} else {
+					req = httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
+				}
+				req.Host = "localhost:1323"
+				req.URL.Path = "/get_friend_of_friend_list_paging/" + tt.param.userID
+				rec := httptest.NewRecorder()
+				c := e.NewContext(req, rec)
+				c.SetPath("/get_friend_of_friend_list_of_paging/:user_id")
+				c.SetParamNames("user_id")
+				c.SetParamValues(tt.param.userID)
+
+				return c, rec;
+			}
+
+			assertion := func(want want, err error, rec *httptest.ResponseRecorder) {
+				if err == nil {
+					assert.NoError(t, err)
+					assert.Equal(t, tt.firstWant.code, rec.Code)
+					assert.JSONEq(t, want.body, rec.Body.String())
+					if want.link != "" {
+						assert.Equal(t, want.link, rec.Header().Get("Link"))
+					}
+				} else {
+					assert.Error(t, err)
+					he, ok := err.(*echo.HTTPError)
+					if ok {
+						assert.Equal(t, want.code, he.Code)
+						assert.Equal(t, want.message, he.Message)
+					}
+				}
+			}
+
+			setFixture(tt.firstFixture)
+			c, rec := createContext(tt.param)
+			err := getFriendOfFriendListPagingWithCache(c)
+			assertion(tt.firstWant, err, rec)
+
+			setFixture(tt.secondFixture)
+			c, rec = createContext(tt.param)
+			// return cache
+			err = getFriendOfFriendListPagingWithCache(c)
+			assertion(tt.firstWant, err, rec)
+
+			time.Sleep(1 * time.Second)
+			c, rec = createContext(tt.param)
+			err = getFriendOfFriendListPagingWithCache(c)
+			assertion(tt.secondWant, err, rec)
 		})
 	}
 }
