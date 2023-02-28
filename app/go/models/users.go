@@ -241,11 +241,13 @@ func GetFriendListOfFriendListPaging(userID int, limit, page *int) ([]User, int,
 	var limitNum, offset uint64 = math.MaxUint64, 0
 	if limit != nil {
 		limitNum = uint64(*limit)
-	} else if page != nil {
-		limitNum = 0
 	}
-	if limit != nil && page != nil {
-		offset = uint64(*limit * (*page - 1))
+	if page != nil {
+		if *page != 1 && (limitNum > math.MaxUint64 / uint64(*page - 1)) {
+			offset = math.MaxUint64
+		} else {
+			offset = limitNum * uint64(*page - 1)
+		}
 	}
 
 	rows, err := db.Query(`

@@ -540,26 +540,6 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 		},
 		{
-			name: "OK: Limit=undefined Page=0",
-			fixture: fixture{
-				fls: []models.FriendLink{
-					{User1ID: 1, User2ID: 2},
-					{User1ID: 2, User2ID: 3}, {User1ID: 2, User2ID: 4},
-					{User1ID: 2, User2ID: 5}, {User1ID: 2, User2ID: 6},
-					{User1ID: 2, User2ID: 7}, {User1ID: 2, User2ID: 8},
-					{User1ID: 2, User2ID: 9}, {User1ID: 2, User2ID: 10},
-				},
-			},
-			param: param{
-				userID: "1",
-				page:   NullString{String: "0", Valid: true},
-			},
-			want: want{
-				code: http.StatusOK,
-				body: `[]` + "\n",
-			},
-		},
-		{
 			name: "OK: Limit=undefined Page=2",
 			fixture: fixture{
 				fls: []models.FriendLink{
@@ -577,28 +557,6 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			want: want{
 				code: http.StatusOK,
 				body: `[]` + "\n",
-			},
-		},
-		{
-			name: "OK: Limit=2 Page=0",
-			fixture: fixture{
-				fls: []models.FriendLink{
-					{User1ID: 1, User2ID: 2},
-					{User1ID: 2, User2ID: 3}, {User1ID: 2, User2ID: 4},
-					{User1ID: 2, User2ID: 5}, {User1ID: 2, User2ID: 6},
-					{User1ID: 2, User2ID: 7}, {User1ID: 2, User2ID: 8},
-					{User1ID: 2, User2ID: 9}, {User1ID: 2, User2ID: 10},
-				},
-			},
-			param: param{
-				userID: "1",
-				limit:  NullString{String: "2", Valid: true},
-				page:   NullString{String: "0", Valid: true},
-			},
-			want: want{
-				code: http.StatusOK,
-				body: `[]` + "\n",
-				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=4>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="next"`,
 			},
 		},
 		{
@@ -776,6 +734,17 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			param: param{
 				userID: "1",
 				page:   NullString{String: "a", Valid: true},
+			},
+			want: want{
+				code:    http.StatusBadRequest,
+				message: `invalid params`,
+			},
+		},
+		{
+			name: "BadRequest: Limit=undefined Page=0",
+			param: param{
+				userID: "1",
+				page:   NullString{String: "0", Valid: true},
 			},
 			want: want{
 				code:    http.StatusBadRequest,

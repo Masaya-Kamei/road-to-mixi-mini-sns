@@ -83,7 +83,7 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 	if (err != nil) ||
 		(params.UserID == nil || c.Param("user_id") == "") ||
 		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit < 0)) ||
-		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0)) {
+		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page <= 0)) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
 	}
 	userID, limit, page := *params.UserID, params.Limit, params.Page
@@ -136,7 +136,7 @@ func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 	if (err != nil) ||
 		(params.UserID == nil || c.Param("user_id") == "") ||
 		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit < 0)) ||
-		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0)) {
+		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page <= 0)) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
 	}
 	userID, limit, page := *params.UserID, params.Limit, params.Page
