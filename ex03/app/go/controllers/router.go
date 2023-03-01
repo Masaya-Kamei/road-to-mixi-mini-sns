@@ -16,5 +16,10 @@ func NewRouter() *echo.Echo {
 	// for debug
 	e.POST("/create_friend_link", createFriendLink)
 
+	// client ip check
+	e.GET("/get_client_ip", func (c echo.Context) error {
+		return c.String(200, c.RealIP())
+	})
+
 	return e
 }
