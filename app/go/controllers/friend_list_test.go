@@ -858,7 +858,31 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 		secondWant    want
 	}{
 		{
-			name: "OK: Limit=2 Page=2",
+			name: "OK: Cache",
+			param: param{
+				userID: "1",
+			},
+			firstFixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 1, User2ID: 2}, {User1ID: 2, User2ID: 3},
+				},
+			},
+			firstWant: want{
+				code: http.StatusOK,
+				body: `[{"UserID":3,"Name":"user3"}]` + "\n",
+			},
+			secondFixture: fixture{
+				fls: []models.FriendLink{
+					{User1ID: 2, User2ID: 4},
+				},
+			},
+			secondWant: want{
+				code: http.StatusOK,
+				body: `[{"UserID":3,"Name":"user3"},{"UserID":4,"Name":"user4"}]` + "\n",
+			},
+		},
+		{
+			name: "OK: Cache Limit=2 Page=2",
 			param: param{
 				userID: "1",
 				limit:  NullString{String: "2", Valid: true},
@@ -885,6 +909,74 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 				code: http.StatusOK,
 				body: `[{"UserID":5,"Name":"user5"},{"UserID":6,"Name":"user6"}]` + "\n",
 				link: `<http://localhost:1323/get_friend_of_friend_list_paging_with_cache/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging_with_cache/1?limit=2&page=2>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging_with_cache/1?limit=2&page=1>; rel="prev"`,
+			},
+		},
+		{
+			name:  "NotFound: UserId Not Found",
+			param: param{userID: "100"},
+			firstWant: want{
+				code:    http.StatusNotFound,
+				message: `user_id is not found`,
+			},
+		},
+		{
+			name:  "BadRequest: UserId Not Integer",
+			param: param{userID: "a"},
+			firstWant: want{
+				code:    http.StatusBadRequest,
+				message: `invalid params`,
+			},
+		},
+		{
+			name:  "BadRequest: UserId Empty",
+			param: param{userID: ""},
+			firstWant: want{
+				code:    http.StatusBadRequest,
+				message: `invalid params`,
+			},
+		},
+		{
+			name: "BadRequest: Limit=0 Page=undefined",
+			param: param{
+				userID: "1",
+				limit:  NullString{String: "0", Valid: true},
+			},
+			firstWant: want{
+				code: http.StatusBadRequest,
+				message: `invalid params`,
+			},
+		},
+		{
+			name: "BadRequest: Limit=undefined Page=0",
+			param: param{
+				userID: "1",
+				page:   NullString{String: "0", Valid: true},
+			},
+			firstWant: want{
+				code:    http.StatusBadRequest,
+				message: `invalid params`,
+			},
+		},
+		{
+			name: "BadRequest: Limit=(empty) Page=undefined",
+			param: param{
+				userID: "1",
+				limit:  NullString{String: "", Valid: true},
+			},
+			firstWant: want{
+				code:    http.StatusBadRequest,
+				message: `invalid params`,
+			},
+		},
+		{
+			name: "BadRequest: Limit=undefined Page=(empty)",
+			param: param{
+				userID: "1",
+				page:   NullString{String: "", Valid: true},
+			},
+			firstWant: want{
+				code:    http.StatusBadRequest,
+				message: `invalid params`,
 			},
 		},
 	}
@@ -963,16 +1055,18 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 			err := getFriendOfFriendListPagingWithCache(c)
 			assertion(tt.firstWant, err, rec)
 
-			setFixture(tt.secondFixture)
-			c, rec = createContext(tt.param)
-			// return cache
-			err = getFriendOfFriendListPagingWithCache(c)
-			assertion(tt.firstWant, err, rec)
+			if tt.secondFixture.fls != nil {
+				setFixture(tt.secondFixture)
+				c, rec = createContext(tt.param)
+				// return cache
+				err = getFriendOfFriendListPagingWithCache(c)
+				assertion(tt.firstWant, err, rec)
 
-			time.Sleep(1 * time.Second)
-			c, rec = createContext(tt.param)
-			err = getFriendOfFriendListPagingWithCache(c)
-			assertion(tt.secondWant, err, rec)
+				time.Sleep(1 * time.Second)
+				c, rec = createContext(tt.param)
+				err = getFriendOfFriendListPagingWithCache(c)
+				assertion(tt.secondWant, err, rec)
+			}
 		})
 	}
 }
