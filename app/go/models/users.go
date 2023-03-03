@@ -315,7 +315,7 @@ func GetFriendOfFriendListPaging(userID int, limit, page *int) ([]User, int, err
 
 // bonus
 type FflPagingCache struct {
-	ffl      []User
+	ffl       []User
 	foundRows int
 }
 

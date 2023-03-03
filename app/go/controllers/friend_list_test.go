@@ -727,7 +727,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 				limit:  NullString{String: "0", Valid: true},
 			},
 			want: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `invalid params`,
 			},
 		},
@@ -942,7 +942,7 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 				limit:  NullString{String: "0", Valid: true},
 			},
 			firstWant: want{
-				code: http.StatusBadRequest,
+				code:    http.StatusBadRequest,
 				message: `invalid params`,
 			},
 		},
