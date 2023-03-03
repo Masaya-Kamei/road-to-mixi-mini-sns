@@ -520,26 +520,6 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 		},
 		{
-			name: "OK: Limit=0 Page=undefined",
-			fixture: fixture{
-				fls: []models.FriendLink{
-					{User1ID: 1, User2ID: 2},
-					{User1ID: 2, User2ID: 3}, {User1ID: 2, User2ID: 4},
-					{User1ID: 2, User2ID: 5}, {User1ID: 2, User2ID: 6},
-					{User1ID: 2, User2ID: 7}, {User1ID: 2, User2ID: 8},
-					{User1ID: 2, User2ID: 9}, {User1ID: 2, User2ID: 10},
-				},
-			},
-			param: param{
-				userID: "1",
-				limit:  NullString{String: "0", Valid: true},
-			},
-			want: want{
-				code: http.StatusOK,
-				body: `[]` + "\n",
-			},
-		},
-		{
 			name: "OK: Limit=undefined Page=2",
 			fixture: fixture{
 				fls: []models.FriendLink{
@@ -737,6 +717,17 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			},
 			want: want{
 				code:    http.StatusBadRequest,
+				message: `invalid params`,
+			},
+		},
+		{
+			name: "BadRequest: Limit=0 Page=undefined",
+			param: param{
+				userID: "1",
+				limit:  NullString{String: "0", Valid: true},
+			},
+			want: want{
+				code: http.StatusBadRequest,
 				message: `invalid params`,
 			},
 		},
