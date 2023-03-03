@@ -29,7 +29,7 @@ func getFriendList(c echo.Context) error {
 	return c.JSON(http.StatusOK, fl)
 }
 
-func getFriendListOfFriendList(c echo.Context) error {
+func getFriendOfFriendList(c echo.Context) error {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
@@ -40,16 +40,16 @@ func getFriendListOfFriendList(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, err := models.GetFriendListOfFriendList(userID)
+	ffl, err := models.GetFriendOfFriendList(userID)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError, "failed to get friend list of friend list")
 	}
 
-	return c.JSON(http.StatusOK, flFl)
+	return c.JSON(http.StatusOK, ffl)
 }
 
-func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
+func getFriendOfFriendListExceptFriendAndBlocked(c echo.Context) error {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
@@ -60,7 +60,7 @@ func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, err := models.GetFriendListOfFriendListExceptFriendAndBlocked(userID)
+	ffl, err := models.GetFriendOfFriendListExceptFriendAndBlocked(userID)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
@@ -68,7 +68,7 @@ func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
 		)
 	}
 
-	return c.JSON(http.StatusOK, flFl)
+	return c.JSON(http.StatusOK, ffl)
 }
 
 func getFriendOfFriendListPaging(c echo.Context) error {
@@ -93,7 +93,7 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, foundRows, err := models.GetFriendListOfFriendListPaging(userID, limit, page)
+	ffl, foundRows, err := models.GetFriendOfFriendListPaging(userID, limit, page)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
@@ -103,7 +103,7 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 
 	setLinkHeader(c, limit, page, foundRows)
 
-	return c.JSON(http.StatusOK, flFl)
+	return c.JSON(http.StatusOK, ffl)
 }
 
 func setLinkHeader(c echo.Context, limit *int, page *int, foundRows int) {
@@ -149,7 +149,7 @@ func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, foundRows, err := models.GetFriendListOfFriendListPagingWithCache(userID, limit, page)
+	ffl, foundRows, err := models.GetFriendOfFriendListPagingWithCache(userID, limit, page)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
@@ -159,5 +159,5 @@ func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 
 	setLinkHeader(c, limit, page, foundRows)
 
-	return c.JSON(http.StatusOK, flFl)
+	return c.JSON(http.StatusOK, ffl)
 }

@@ -154,7 +154,7 @@ func TestGetFriendList(t *testing.T) {
 	}
 }
 
-func TestGetFriendListOfFriendList(t *testing.T) {
+func TestGetFriendOfFriendList(t *testing.T) {
 
 	type fixture struct{ fls []models.FriendLink }
 	type param struct{ userID string }
@@ -267,11 +267,11 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			c.SetPath("/get_friend_list_of_friend_list/:user_id")
+			c.SetPath("/get_friend_of_friend_list/:user_id")
 			c.SetParamNames("user_id")
 			c.SetParamValues(tt.param.userID)
 
-			err := getFriendListOfFriendList(c)
+			err := getFriendOfFriendList(c)
 			if err == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want.code, rec.Code)
@@ -291,7 +291,7 @@ func TestGetFriendListOfFriendList(t *testing.T) {
 	}
 }
 
-func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
+func TestGetFriendOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 
 	type fixture struct {
 		fls []models.FriendLink
@@ -430,11 +430,11 @@ func TestGetFriendListOfFriendListExceptFriendAndFriendBlocked(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			c.SetPath("/get_friend_list_of_friend_list/:user_id")
+			c.SetPath("/get_friend_of_friend_list/:user_id")
 			c.SetParamNames("user_id")
 			c.SetParamValues(tt.param.userID)
 
-			err := getFriendListOfFriendListExceptFriendAndBlocked(c)
+			err := getFriendOfFriendListExceptFriendAndBlocked(c)
 			if err == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.want.code, rec.Code)
@@ -806,7 +806,7 @@ func TestGetFriendOfFriendListPaging(t *testing.T) {
 			req.URL.Path = "/get_friend_of_friend_list_paging/" + tt.param.userID
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
-			c.SetPath("/get_friend_of_friend_list_of_paging/:user_id")
+			c.SetPath("/get_friend_of_friend_list_paging/:user_id")
 			c.SetParamNames("user_id")
 			c.SetParamValues(tt.param.userID)
 
@@ -874,7 +874,7 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 			firstWant: want{
 				code: http.StatusOK,
 				body: `[{"UserID":5,"Name":"user5"}]` + "\n",
-				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=2>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="prev"`,
+				link: `<http://localhost:1323/get_friend_of_friend_list_paging_with_cache/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging_with_cache/1?limit=2&page=2>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging_with_cache/1?limit=2&page=1>; rel="prev"`,
 			},
 			secondFixture: fixture{
 				fls: []models.FriendLink{
@@ -884,7 +884,7 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 			secondWant: want{
 				code: http.StatusOK,
 				body: `[{"UserID":5,"Name":"user5"},{"UserID":6,"Name":"user6"}]` + "\n",
-				link: `<http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=2>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging/1?limit=2&page=1>; rel="prev"`,
+				link: `<http://localhost:1323/get_friend_of_friend_list_paging_with_cache/1?limit=2&page=1>; rel="first", <http://localhost:1323/get_friend_of_friend_list_paging_with_cache/1?limit=2&page=2>; rel="last", <http://localhost:1323/get_friend_of_friend_list_paging_with_cache/1?limit=2&page=1>; rel="prev"`,
 			},
 		},
 	}
@@ -930,10 +930,10 @@ func TestGetFriendOfFriendListPagingWithCache(t *testing.T) {
 					req = httptest.NewRequest(http.MethodGet, "/?"+q.Encode(), nil)
 				}
 				req.Host = "localhost:1323"
-				req.URL.Path = "/get_friend_of_friend_list_paging/" + tt.param.userID
+				req.URL.Path = "/get_friend_of_friend_list_paging_with_cache/" + tt.param.userID
 				rec := httptest.NewRecorder()
 				c := e.NewContext(req, rec)
-				c.SetPath("/get_friend_of_friend_list_of_paging/:user_id")
+				c.SetPath("/get_friend_of_friend_list_paging_with_cache/:user_id")
 				c.SetParamNames("user_id")
 				c.SetParamValues(tt.param.userID)
 

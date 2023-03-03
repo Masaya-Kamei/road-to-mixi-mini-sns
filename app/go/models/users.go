@@ -138,7 +138,7 @@ func GetFriendList(userID int) ([]User, error) {
 	return fl, nil
 }
 
-func GetFriendListOfFriendList(userID int) ([]User, error) {
+func GetFriendOfFriendList(userID int) ([]User, error) {
 	rows, err := db.Query(`
 		select distinct u2.user_id, u2.name
 		from users u1
@@ -166,23 +166,23 @@ func GetFriendListOfFriendList(userID int) ([]User, error) {
 	}
 	defer rows.Close()
 
-	flFl := make([]User, 0)
+	ffl := make([]User, 0)
 	for rows.Next() {
-		var fFl User
-		err := rows.Scan(&fFl.UserID, &fFl.Name)
+		var ff User
+		err := rows.Scan(&ff.UserID, &ff.Name)
 		if err != nil {
 			return nil, err
 		}
-		flFl = append(flFl, fFl)
+		ffl = append(ffl, ff)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return flFl, nil
+	return ffl, nil
 }
 
-func GetFriendListOfFriendListExceptFriendAndBlocked(userID int) ([]User, error) {
+func GetFriendOfFriendListExceptFriendAndBlocked(userID int) ([]User, error) {
 	rows, err := db.Query(`
 		select distinct u2.user_id, u2.name
 		from users u1
@@ -221,23 +221,23 @@ func GetFriendListOfFriendListExceptFriendAndBlocked(userID int) ([]User, error)
 	}
 	defer rows.Close()
 
-	flFl := make([]User, 0)
+	ffl := make([]User, 0)
 	for rows.Next() {
-		var fFl User
-		err := rows.Scan(&fFl.UserID, &fFl.Name)
+		var ff User
+		err := rows.Scan(&ff.UserID, &ff.Name)
 		if err != nil {
 			return nil, err
 		}
-		flFl = append(flFl, fFl)
+		ffl = append(ffl, ff)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return flFl, nil
+	return ffl, nil
 }
 
-func GetFriendListOfFriendListPaging(userID int, limit, page *int) ([]User, int, error) {
+func GetFriendOfFriendListPaging(userID int, limit, page *int) ([]User, int, error) {
 	var limitNum, offset uint64 = math.MaxUint64, 0
 	if limit != nil {
 		limitNum = uint64(*limit)
@@ -291,14 +291,14 @@ func GetFriendListOfFriendListPaging(userID int, limit, page *int) ([]User, int,
 	}
 	defer rows.Close()
 
-	flFl := make([]User, 0)
+	ffl := make([]User, 0)
 	for rows.Next() {
-		var fFl User
-		err := rows.Scan(&fFl.UserID, &fFl.Name)
+		var ff User
+		err := rows.Scan(&ff.UserID, &ff.Name)
 		if err != nil {
 			return nil, 0, err
 		}
-		flFl = append(flFl, fFl)
+		ffl = append(ffl, ff)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, err
@@ -310,16 +310,16 @@ func GetFriendListOfFriendListPaging(userID int, limit, page *int) ([]User, int,
 		return nil, 0, err
 	}
 
-	return flFl, foundRows, nil
+	return ffl, foundRows, nil
 }
 
 // bonus
-type FlFlPagingCache struct {
-	flFl      []User
+type FflPagingCache struct {
+	ffl      []User
 	foundRows int
 }
 
-func GetFriendListOfFriendListPagingWithCache(userID int, limit, page *int) ([]User, int, error) {
+func GetFriendOfFriendListPagingWithCache(userID int, limit, page *int) ([]User, int, error) {
 	cacheKey := "friend_of_friend_list_paging-" + strconv.Itoa(userID)
 	if limit != nil {
 		cacheKey += "-" + strconv.Itoa(*limit)
@@ -328,19 +328,19 @@ func GetFriendListOfFriendListPagingWithCache(userID int, limit, page *int) ([]U
 		cacheKey += "-" + strconv.Itoa(*page)
 	}
 
-	flFlPagingCache, found := cacheInstance.Get(cacheKey)
+	fflPagingCache, found := cacheInstance.Get(cacheKey)
 	if found {
-		flFlPagingCache := flFlPagingCache.(FlFlPagingCache)
-		return flFlPagingCache.flFl, flFlPagingCache.foundRows, nil
+		fflPagingCache := fflPagingCache.(FflPagingCache)
+		return fflPagingCache.ffl, fflPagingCache.foundRows, nil
 	}
 
-	flFl, foundRows, err := GetFriendListOfFriendListPaging(userID, limit, page)
+	ffl, foundRows, err := GetFriendOfFriendListPaging(userID, limit, page)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	newCache := FlFlPagingCache{flFl: flFl, foundRows: foundRows}
+	newCache := FflPagingCache{ffl: ffl, foundRows: foundRows}
 	cacheInstance.Set(cacheKey, newCache, cache.DefaultExpiration)
 
-	return flFl, foundRows, nil
+	return ffl, foundRows, nil
 }
