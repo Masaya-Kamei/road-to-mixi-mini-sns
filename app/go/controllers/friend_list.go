@@ -43,7 +43,7 @@ func getFriendOfFriendList(c echo.Context) error {
 	ffl, err := models.GetFriendOfFriendList(userID)
 	if err != nil {
 		return echo.NewHTTPError(
-			http.StatusInternalServerError, "failed to get friend list of friend list")
+			http.StatusInternalServerError, "failed to get friend of friend list")
 	}
 
 	return c.JSON(http.StatusOK, ffl)
@@ -64,7 +64,7 @@ func getFriendOfFriendListExceptFriendAndBlocked(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
-			"failed to get friend list of friend list except friend and blocked",
+			"failed to get friend of friend list except friend and blocked",
 		)
 	}
 
@@ -97,7 +97,7 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
-			"failed to get friend list of friend list paging",
+			"failed to get friend of friend list paging",
 		)
 	}
 
@@ -153,7 +153,7 @@ func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
-			"failed to get friend list of friend list paging",
+			"failed to get friend of friend list paging with cache",
 		)
 	}
 
