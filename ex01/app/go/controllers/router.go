@@ -7,8 +7,9 @@ func NewRouter() *echo.Echo {
 
 	e.GET("/", top)
 	e.GET("/get_friend_list/:user_id", getFriendList)
-	// e.GET("/get_friend_list_of_friend_list/:user_id", getFriendListOfFriendList)
-	e.GET("/get_friend_list_of_friend_list/:user_id", getFriendListOfFriendListExceptFriendAndBlocked)
+	e.GET("/get_friend_of_friend_list/:user_id", getFriendOfFriendList)
+	// e.GET("/get_friend_of_friend_list/:user_id", getFriendOfFriendListExceptFriendAndBlocked)
+	e.GET("/get_friend_of_friend_list_v2/:user_id", getFriendOfFriendListExceptFriendAndBlocked)
 	e.GET("/get_friend_of_friend_list_paging/:user_id", getFriendOfFriendListPaging)
 
 	// bonus

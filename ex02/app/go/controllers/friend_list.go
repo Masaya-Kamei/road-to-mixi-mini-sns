@@ -29,7 +29,7 @@ func getFriendList(c echo.Context) error {
 	return c.JSON(http.StatusOK, fl)
 }
 
-func getFriendListOfFriendList(c echo.Context) error {
+func getFriendOfFriendList(c echo.Context) error {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
@@ -40,16 +40,16 @@ func getFriendListOfFriendList(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, err := models.GetFriendListOfFriendList(userID)
+	ffl, err := models.GetFriendOfFriendList(userID)
 	if err != nil {
 		return echo.NewHTTPError(
-			http.StatusInternalServerError, "failed to get friend list of friend list")
+			http.StatusInternalServerError, "failed to get friend of friend list")
 	}
 
-	return c.JSON(http.StatusOK, flFl)
+	return c.JSON(http.StatusOK, ffl)
 }
 
-func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
+func getFriendOfFriendListExceptFriendAndBlocked(c echo.Context) error {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "user_id is not integer")
@@ -60,15 +60,15 @@ func getFriendListOfFriendListExceptFriendAndBlocked(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, err := models.GetFriendListOfFriendListExceptFriendAndBlocked(userID)
+	ffl, err := models.GetFriendOfFriendListExceptFriendAndBlocked(userID)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
-			"failed to get friend list of friend list except friend and blocked",
+			"failed to get friend of friend list except friend and blocked",
 		)
 	}
 
-	return c.JSON(http.StatusOK, flFl)
+	return c.JSON(http.StatusOK, ffl)
 }
 
 func getFriendOfFriendListPaging(c echo.Context) error {
@@ -82,8 +82,8 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 	err := c.Bind(&params)
 	if (err != nil) ||
 		(params.UserID == nil || c.Param("user_id") == "") ||
-		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit < 0)) ||
-		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0)) {
+		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit <= 0)) ||
+		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page <= 0)) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
 	}
 	userID, limit, page := *params.UserID, params.Limit, params.Page
@@ -93,34 +93,37 @@ func getFriendOfFriendListPaging(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, foundRows, err := models.GetFriendListOfFriendListPaging(userID, limit, page)
+	ffl, foundRows, err := models.GetFriendOfFriendListPaging(userID, limit, page)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
-			"failed to get friend list of friend list paging",
+			"failed to get friend of friend list paging",
 		)
 	}
 
-	if limit != nil && page != nil {
-		c.Response().Header().Set("Link", generateLinkHeader(c, *limit, *page, foundRows))
-	}
+	setLinkHeader(c, limit, page, foundRows)
 
-	return c.JSON(http.StatusOK, flFl)
+	return c.JSON(http.StatusOK, ffl)
 }
 
-func generateLinkHeader(c echo.Context, limit, page, foundRows int) string {
-	lastPage := (foundRows + 1) / limit
+func setLinkHeader(c echo.Context, limit *int, page *int, foundRows int) {
+	if limit == nil || page == nil || *limit <= 0 || *page <= 0 {
+		return
+	}
+	limitNum := *limit
+	pageNum := *page
+	lastPageNum := (foundRows + 1) / limitNum
 	baseUrl := "http://" + c.Request().Host + c.Request().URL.Path
 	linkHeaderTemplate := "<" + baseUrl + "?limit=%d&page=%d>; rel=\"%s\", "
-	linkHeader := fmt.Sprintf(linkHeaderTemplate, limit, 1, "first")
-	linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, lastPage, "last")
-	if page > 1 {
-		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page-1, "prev")
+	linkHeader := fmt.Sprintf(linkHeaderTemplate, limitNum, 1, "first")
+	linkHeader += fmt.Sprintf(linkHeaderTemplate, limitNum, lastPageNum, "last")
+	if pageNum > 1 {
+		linkHeader += fmt.Sprintf(linkHeaderTemplate, limitNum, pageNum-1, "prev")
 	}
-	if page < lastPage {
-		linkHeader += fmt.Sprintf(linkHeaderTemplate, limit, page+1, "next")
+	if pageNum < lastPageNum {
+		linkHeader += fmt.Sprintf(linkHeaderTemplate, limitNum, pageNum+1, "next")
 	}
-	return strings.TrimSuffix(linkHeader, ", ")
+	c.Response().Header().Set("Link", strings.TrimSuffix(linkHeader, ", "))
 }
 
 // bonus
@@ -135,8 +138,8 @@ func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 	err := c.Bind(&params)
 	if (err != nil) ||
 		(params.UserID == nil || c.Param("user_id") == "") ||
-		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit < 0)) ||
-		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page < 0)) {
+		(params.Limit != nil && (c.QueryParam("limit") == "" || *params.Limit <= 0)) ||
+		(params.Page != nil && (c.QueryParam("page") == "" || *params.Page <= 0)) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid params")
 	}
 	userID, limit, page := *params.UserID, params.Limit, params.Page
@@ -146,17 +149,15 @@ func getFriendOfFriendListPagingWithCache(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "user_id is not found")
 	}
 
-	flFl, foundRows, err := models.GetFriendListOfFriendListPagingWithCache(userID, limit, page)
+	ffl, foundRows, err := models.GetFriendOfFriendListPagingWithCache(userID, limit, page)
 	if err != nil {
 		return echo.NewHTTPError(
 			http.StatusInternalServerError,
-			"failed to get friend list of friend list paging",
+			"failed to get friend of friend list paging with cache",
 		)
 	}
 
-	if limit != nil && page != nil {
-		c.Response().Header().Set("Link", generateLinkHeader(c, *limit, *page, foundRows))
-	}
+	setLinkHeader(c, limit, page, foundRows)
 
-	return c.JSON(http.StatusOK, flFl)
+	return c.JSON(http.StatusOK, ffl)
 }
